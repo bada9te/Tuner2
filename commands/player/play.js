@@ -1,5 +1,6 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { useMainPlayer } = require('discord-player');
+const { MainCustomExtractor } = require("../../custom-audio-extractors/mainExtractor");
 
 
 module.exports = {
@@ -10,7 +11,12 @@ module.exports = {
         .addStringOption(option =>
             option.setName('query')
                 .setDescription('Search query')
-                .setRequired(true)
+                .setRequired(false)
+        )
+        .addAttachmentOption(option =>
+            option.setName('file')
+                .setDescription('Upload a file to play')
+                .setRequired(false)
         ),
     async execute(interaction) {
         const player = useMainPlayer();
@@ -20,60 +26,100 @@ module.exports = {
             return await interaction.reply('You are not connected to the voice channel!');
         }
 
-        // Get the voice channel of the user and check permissions
-        const voiceChannel = interaction.member.voice.channel;
-
-        if (!voiceChannel) {
-            return interaction.reply(
-                'You need to be in a voice channel to play music!',
-            );
-        }
-
         if (
             interaction.guild.members.me.voice.channel &&
-            interaction.guild.members.me.voice.channel !== voiceChannel
+            interaction.guild.members.me.voice.channel !== channel
         ) {
-            return interaction.reply(
-                'I am already playing in a different voice channel!',
-            );
+            return interaction.reply('I am already playing in a different voice channel!');
         }
 
-        if (
-            !voiceChannel
-                .permissionsFor(interaction.guild.members.me)
-                .has(PermissionsBitField.Flags.Connect)
-        ) {
-            return interaction.reply(
-                'I do not have permission to join your voice channel!',
-            );
+        const permissions = channel.permissionsFor(interaction.guild.members.me);
+        if (!permissions.has(PermissionsBitField.Flags.Connect) ||
+            !permissions.has(PermissionsBitField.Flags.Speak)) {
+            return interaction.reply('I do not have permission to join and speak in your voice channel!');
         }
 
-
-        if (
-            !voiceChannel
-                .permissionsFor(interaction.guild.members.me)
-                .has(PermissionsBitField.Flags.Speak)
-        ) {
-            return interaction.reply(
-                'I do not have permission to speak in your voice channel!',
-            );
-        }
-
-        const query = interaction.options.getString('query', true);
-
+        const query = interaction.options.getString('query');
+        const attachment = interaction.options.getAttachment('file'); // Get the attachment if provided
         await interaction.deferReply();
 
         try {
-            const { track } = await player.play(channel, query, {
-                nodeOptions: {
-                    metadata: interaction,
-                },
+            // Set the search engine based on whether the query is a file or not
+            const searchEngine = `ext:${MainCustomExtractor.identifier}`;
+
+            const searchResult = await player.search(query || attachment.url, {
+                requestedBy: interaction.user,
+                searchEngine: searchEngine,
             });
 
-            return interaction.followUp(`**${track.cleanTitle}** enqueued.`);
+            if (!searchResult || !searchResult.tracks.length) {
+                return interaction.followUp('No tracks found for your query.');
+            }
+
+            const topTracks = searchResult.tracks.slice(0, 10);
+
+                const menu = new StringSelectMenuBuilder()
+                    .setCustomId('track_select')
+                    .setPlaceholder('Choose a track to play')
+                    .addOptions(
+                        topTracks.map((track, index) => {
+                            return {
+                                label: `[${track.duration}] ${track.title.slice(0, 80)}`,
+                                description: track.author.slice(0, 50),
+                                value: index.toString(),
+                            }
+                        })
+                    );
+
+                const row = new ActionRowBuilder().addComponents(menu);
+
+                await interaction.followUp({
+                    content: 'Select a track to play:',
+                    components: [row],
+                });
+
+                const collector = interaction.channel.createMessageComponentCollector({
+                    componentType: ComponentType.StringSelect,
+                    time: 15000,
+                    max: 1,
+                });
+
+                collector.on('collect', async i => {
+                    if (i.user.id !== interaction.user.id) {
+                        return i.reply({ content: 'This menu is not for you!', ephemeral: true });
+                    }
+
+                    const selectedIndex = parseInt(i.values[0]);
+                    const selectedTrack = topTracks[selectedIndex];
+
+                    const queue = player.nodes.get(interaction.guildId) ?? player.nodes.create(interaction.guild, {
+                        metadata: interaction,
+                        selfDeaf: true,
+                        volume: 80,
+                    });
+
+                    if (!queue.connection) await queue.connect(channel);
+
+                    queue.addTrack(selectedTrack);
+
+                    if (!queue.isPlaying()) {
+                        await queue.node.play();
+                    }
+
+                    await i.update({
+                        content: `Enqueued: **${selectedTrack.title}**`,
+                        components: [],
+                    });
+                });
+
+                collector.on('end', collected => {
+                    if (collected.size === 0) {
+                        interaction.editReply({ content: 'No selection made in time.', components: [] });
+                    }
+                });
         } catch (e) {
             console.error(e);
-            return interaction.followUp(`Track could not be played.`);
+            return interaction.followUp('Something went wrong while trying to play the track.');
         }
-    }
-}
+    },
+};

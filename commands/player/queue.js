@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { useQueue } = require('discord-player');
+const { useQueue, useMainPlayer} = require('discord-player');
 
 module.exports = {
     isPlayerCommand: true,
@@ -8,7 +8,9 @@ module.exports = {
         .setDescription('Shows the queue of the current server.'),
     async execute(interaction) {
         // Get the current queue
-        const queue = useQueue();
+        const player = useMainPlayer();
+
+        const queue = player.nodes.get(interaction.guildId);
 
         if (!queue) {
             return interaction.reply(
@@ -17,10 +19,10 @@ module.exports = {
         }
 
         // Get the current track
-        const currentTrack = queue.current;
+        const currentTrack = queue.currentTrack;
 
         // Get the upcoming tracks
-        const upcomingTracks = queue.tracks.slice(0, 5);
+        const upcomingTracks = queue.tracks.toArray().slice(0, 5);
 
         // Create a message with the current track and upcoming tracks
         const message = [

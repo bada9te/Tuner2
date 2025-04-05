@@ -1,18 +1,15 @@
 // Require the necessary discord.js classes
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { Player } = require("discord-player");
+const { Player, GuildQueueEvent } = require("discord-player");
 const { DefaultExtractors} = require('@discord-player/extractor');
 const path = require("path");
 const fs = require("fs");
-const {YouTubeExtractor} = require("./custom-audio-extractors/youtube");
-
+const {MainCustomExtractor} = require("./custom-audio-extractors/mainExtractor");
 
 require('dotenv').config();
 
-
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, 'GuildVoiceStates'] });
-
 
 // Add commands to client instance
 client.commands = new Collection();
@@ -20,10 +17,21 @@ client.commands = new Collection();
 // Player instance (handles all queues and guilds)
 const player = new Player(client);
 
+// Handle the event when a track starts playing
+player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
+    const { channel } = queue.metadata;
+    await channel.send(`Now playing: ${track.title}`);
+});
+
+// Handle the event when a track finishes playing
+player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
+    const { channel } = queue.metadata;
+    await channel.send(`Finished playing ${track.title}`);
+});
+
 async function loadExt() {
     // Load player extractors
-    await player.extractors.loadMulti(DefaultExtractors);
-    await player.extractors.register(YouTubeExtractor, true); // Register and override
+    await player.extractors.register(MainCustomExtractor, true);
 }
 
 loadExt()

@@ -1,6 +1,6 @@
 {
   "engines": {
-    "node": "23"
+    "node": ">=23.0.0"
   },
   "type": "commonjs",
   "name": "tuner2",

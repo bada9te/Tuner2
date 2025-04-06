@@ -1,13 +1,16 @@
 FROM node:22.14.0
 
+# Install FFmpeg
+RUN apt-get update && apt-get install -y ffmpeg
+
+# Set working directory
 WORKDIR /app
 
-COPY package*.json .
-
+# Copy project files
 COPY . .
 
-RUN npm run build
+# Install dependencies
+RUN npm install
 
-EXPOSE 3000
-
-CMD ["npm", "run", "start"]
+# Run your bot
+CMD ["node", "index.js"]

@@ -45,11 +45,11 @@ module.exports = {
 
         try {
             // Set the search engine based on whether the query is a file or not
-            const searchEngine = `ext:${MainCustomExtractor.identifier}`;
+            // const searchEngine = `ext:${MainCustomExtractor.identifier}`;
 
             const searchResult = await player.search(query || attachment.url, {
                 requestedBy: interaction.user,
-                searchEngine: searchEngine,
+                // searchEngine: searchEngine,
             });
 
             if (!searchResult || !searchResult.tracks.length) {

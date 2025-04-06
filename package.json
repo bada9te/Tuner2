@@ -21,7 +21,7 @@
     "@distube/ytdl-core": "^4.16.8",
     "@edgeros/safe-stable-stringify": "^2.4.4",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
-    "crypto": "^1.0.1",
+    "@discordjs/voice": "^0.14.0",
     "discord-player": "^7.1.0",
     "discord-voip": "^7.1.0",
     "discord.js": "^14.18.0",

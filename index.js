@@ -5,6 +5,7 @@ const { DefaultExtractors} = require('@discord-player/extractor');
 const path = require("path");
 const fs = require("fs");
 const {MainCustomExtractor} = require("./custom-audio-extractors/mainExtractor");
+const ffmpegPath = require('ffmpeg-static');
 
 require('dotenv').config();
 
@@ -22,7 +23,9 @@ const client = new Client({
 client.commands = new Collection();
 
 // Player instance (handles all queues and guilds)
-const player = new Player(client);
+const player = new Player(client, {
+    ffmpegPath: ffmpegPath
+});
 
 // Handle the event when a track starts playing
 player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {

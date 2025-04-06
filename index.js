@@ -8,6 +8,8 @@ const {MainCustomExtractor} = require("./custom-audio-extractors/mainExtractor")
 
 require('dotenv').config();
 
+BigInt.prototype.toJSON = function () { return Number(this) }
+
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, 'GuildVoiceStates'] });
 

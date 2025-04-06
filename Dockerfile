@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:22.14.0
 
 # Install system deps for building native modules and ffmpeg
 RUN apt-get update && apt-get install -y \

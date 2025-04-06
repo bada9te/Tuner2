@@ -8,6 +8,7 @@ const {MainCustomExtractor} = require("./custom-audio-extractors/mainExtractor")
 
 require('dotenv').config();
 
+// JSON.stringify = require('safe-stable-stringify')
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds, 'GuildVoiceStates'] });
@@ -33,10 +34,6 @@ player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
 
 player.events.on(GuildQueueEvent.Error, (queue, error) => {
     console.error(`❌ Error: ${error.message}`);
-});
-
-player.events.on(GuildQueueEvent.Debug, (queue, message) => {
-    console.log(`[DEBUG] ${message}`);
 });
 
 

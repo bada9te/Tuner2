@@ -89,6 +89,8 @@ module.exports = {
                         return i.reply({ content: 'This menu is not for you!', ephemeral: true });
                     }
 
+                    await i.deferUpdate(); // prevent interaction expiration
+
                     const selectedIndex = parseInt(i.values[0]);
                     const selectedTrack = topTracks[selectedIndex];
 
@@ -106,15 +108,27 @@ module.exports = {
                         await queue.node.play();
                     }
 
-                    await i.update({
-                        content: `Enqueued: **${selectedTrack.title}**`,
-                        components: [],
-                    });
+                    try {
+                        await interaction.editReply({
+                            content: `Enqueued: **${selectedTrack.title}**`,
+                            components: [],
+                        });
+                    } catch (err) {
+                        console.warn('Could not update interaction:', err);
+                    }
                 });
 
-                collector.on('end', collected => {
+
+                collector.on('end', async collected => {
                     if (collected.size === 0) {
-                        interaction.editReply({ content: 'No selection made in time.', components: [] });
+                        try {
+                            await interaction.editReply({
+                                content: 'No selection made in time.',
+                                components: [],
+                            });
+                        } catch (err) {
+                            console.warn('Failed to edit reply after collector timeout:', err);
+                        }
                     }
                 });
         } catch (e) {

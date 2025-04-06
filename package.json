@@ -12,6 +12,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
+    "build": "echo 'No build required!'",
     "dev": "nodemon ./index.js",
     "start": "node ./index.js"
   },

@@ -11,7 +11,12 @@ require('dotenv').config();
 // JSON.stringify = require('safe-stable-stringify')
 
 // Create a new client instance
-const client = new Client({ intents: [GatewayIntentBits.Guilds, 'GuildVoiceStates'] });
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates,
+    ]
+});
 
 // Add commands to client instance
 client.commands = new Collection();
@@ -31,6 +36,7 @@ player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
     const { channel } = queue.metadata;
     await channel.send(`Finished playing ${track.title}`);
 });
+
 
 player.events.on(GuildQueueEvent.Error, (queue, error) => {
     console.error(`❌ Error: ${error.message}`);

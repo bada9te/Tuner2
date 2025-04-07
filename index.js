@@ -51,7 +51,7 @@ player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
 
 async function loadExt() {
     // Load player extractors
-    // await player.extractors.register(AttachmentExtractor);
+    await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI

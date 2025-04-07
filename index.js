@@ -5,7 +5,8 @@ const { AttachmentExtractor, DefaultExtractors} = require('@discord-player/extra
 const path = require("path");
 const fs = require("fs");
 const { MainCustomExtractor } = require("./custom-audio-extractors/mainExtractor");
-const { YoutubeiExtractor } = require("discord-player-youtubei")
+const { YoutubeiExtractor } = require("discord-player-youtubei");
+const { ProxyAgent } = require("undici");
 
 require('dotenv').config();
 
@@ -47,15 +48,18 @@ player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
     console.error(`❌ Player error: ${error.message}`);
 });
 
-console.log(process.env.YT_CRE)
+
 async function loadExt() {
     // Load player extractors
     // await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(YoutubeiExtractor, {
+        proxy: new ProxyAgent({
+            uri: process.env.PROXY_URI
+        }),
         cookie: process.env.YT_CRE,
-        generateWithPoToken: true,
+        // generateWithPoToken: true,
         streamOptions: {
-            useClient: "WEB"
+            useClient: "IOS"
         }
     });
 }

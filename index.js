@@ -43,7 +43,11 @@ player.events.on(GuildQueueEvent.Error, (queue, error) => {
     console.error(`❌ Error: ${error.message}`);
 });
 
+player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
+    console.error(`❌ Player error: ${error.message}`);
+});
 
+console.log(process.env.YT_CRE)
 async function loadExt() {
     // Load player extractors
     // await player.extractors.register(AttachmentExtractor);
@@ -51,7 +55,7 @@ async function loadExt() {
         cookie: process.env.YT_CRE,
         generateWithPoToken: true,
         streamOptions: {
-            useClient: "IOS"
+            useClient: "WEB"
         }
     });
 }

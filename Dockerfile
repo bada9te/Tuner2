@@ -1,4 +1,4 @@
-FROM node:22.14.0
+FROM node:22-bullseye
 
 # Install system deps for building native modules and ffmpeg
 RUN apt-get update && apt-get install -y \

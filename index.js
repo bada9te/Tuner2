@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const {MainCustomExtractor} = require("./custom-audio-extractors/mainExtractor");
 const ffmpegPath = require('ffmpeg-static');
-const { YoutubeiExtractor } = require("discord-player-youtubei")
+// const { YoutubeiExtractor } = require("discord-player-youtubei")
 
 require('dotenv').config();
 
@@ -50,7 +50,8 @@ player.events.on(GuildQueueEvent.Error, (queue, error) => {
 async function loadExt() {
     // Load player extractors
     // await player.extractors.register(MainCustomExtractor, true);
-    await player.extractors.loadMulti([...DefaultExtractors, YoutubeiExtractor]);
+    // await player.extractors.loadMulti([...DefaultExtractors, YoutubeiExtractor]);
+    await player.extractors.register(MainCustomExtractor);
 }
 
 loadExt()

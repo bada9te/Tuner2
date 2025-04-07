@@ -49,7 +49,7 @@ async function loadExt() {
     await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(YoutubeiExtractor, {
         streamOptions: {
-            useClient: "IOS"
+            useClient: "WEB"
         }
     });
 }

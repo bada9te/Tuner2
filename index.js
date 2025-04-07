@@ -1,7 +1,7 @@
 // Require the necessary discord.js classes
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { Player, GuildQueueEvent } = require("discord-player");
-const { DefaultExtractors} = require('@discord-player/extractor');
+const { AttachmentExtractor, DefaultExtractors} = require('@discord-player/extractor');
 const path = require("path");
 const fs = require("fs");
 const { MainCustomExtractor } = require("./custom-audio-extractors/mainExtractor");
@@ -46,8 +46,12 @@ player.events.on(GuildQueueEvent.Error, (queue, error) => {
 
 async function loadExt() {
     // Load player extractors
-    // await player.extractors.register(MainCustomExtractor, true);
-    await player.extractors.loadMulti([...DefaultExtractors, YoutubeiExtractor]);
+    await player.extractors.register(AttachmentExtractor);
+    await player.extractors.register(YoutubeiExtractor, {
+        streamOptions: {
+            useClient: "IOS"
+        }
+    });
 }
 
 loadExt()

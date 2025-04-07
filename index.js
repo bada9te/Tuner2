@@ -48,6 +48,8 @@ async function loadExt() {
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(YoutubeiExtractor, {
+        authentication: process.env.YT_CRE,
+        generateWithPoToken: true,
         streamOptions: {
             useClient: "WEB"
         }

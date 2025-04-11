@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { useMainPlayer } = require('discord-player');
-const { MainCustomExtractor } = require("../../custom-audio-extractors/mainExtractor");
 
 
 module.exports = {

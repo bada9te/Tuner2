@@ -1,5 +1,5 @@
 // Require the necessary discord.js classes
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, EmbedBuilder} = require('discord.js');
 const { Player, GuildQueueEvent } = require("discord-player");
 const { AttachmentExtractor, DefaultExtractors} = require('@discord-player/extractor');
 const path = require("path");
@@ -30,13 +30,31 @@ const player = new Player(client);
 player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
     const { channel } = queue.metadata;
     console.log(`🎵 Playing: ${track.title}`);
-    await channel.send(`Now playing: ${track.title}`);
+    console.log(track)
+    const embed = new EmbedBuilder()
+        .setColor(0x495e35)
+        .setTitle(track.title)
+        .setDescription(track.description)
+        .setThumbnail(track.thumbnail)
+        .setAuthor({
+            name: track.author,
+        })
+        .setURL(track.url)
+        .addFields(
+            { name: 'Duration', value: track.duration, inline: true },
+            { name: 'Views', value: track.views.toString(), inline: true },
+        )
+        .setFooter({
+            text: `Requested by ${track.requestedBy.username}`,
+            iconURL: track.requestedBy.avatarURL()
+        })
+        .setTimestamp();
+    await channel.send({ embeds: [embed] });
 });
 
 // Handle the event when a track finishes playing
 player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
-    const { channel } = queue.metadata;
-    await channel.send(`Finished playing ${track.title}`);
+    console.log(`Finished playing ${track.title}`);
 });
 
 
@@ -54,7 +72,7 @@ async function loadExt() {
     await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
-            uri: process.env.PROXY_URI
+             uri: process.env.PROXY_URI
         }),
         cookie: process.env.YT_CRE,
         // generateWithPoToken: true,

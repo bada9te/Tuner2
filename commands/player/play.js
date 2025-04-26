@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { useMainPlayer } = require('discord-player');
+const { YoutubeiExtractor } = require("discord-player-youtubei");
 
 
 module.exports = {
@@ -10,6 +11,11 @@ module.exports = {
         .addStringOption(option =>
             option.setName('query')
                 .setDescription('Search query')
+                .setRequired(false)
+        )
+        .addStringOption(option =>
+            option.setName('spotify')
+                .setDescription('Spotify track link')
                 .setRequired(false)
         )
         .addAttachmentOption(option =>
@@ -39,20 +45,33 @@ module.exports = {
         }
 
         const query = interaction.options.getString('query');
+        const spotify = interaction.options.getString('spotify');
         const attachment = interaction.options.getAttachment('file'); // Get the attachment if provided
         await interaction.deferReply();
+
+        if (!query && !spotify && !attachment) {
+            return interaction.followUp('Required parameter (query, spotify or attachment) was not provided!');
+        }
 
         try {
             // Set the search engine based on whether the query is a file or not
             // const searchEngine = `ext:${MainCustomExtractor.identifier}`;
 
-            const searchResult = await player.search(query || attachment.url, {
+            let searchResult = await player.search(query || spotify || attachment.url, {
                 requestedBy: interaction.user,
                 // searchEngine: searchEngine,
             });
 
             if (!searchResult || !searchResult.tracks.length) {
                 return interaction.followUp('No tracks found for your query.');
+            }
+
+            // parse spotify
+            if (spotify) {
+                searchResult = await player.search(`${searchResult.tracks[0].author} - ${searchResult.tracks[0].title}`, {
+                    requestedBy: interaction.user,
+                    // searchEngine: YoutubeiExtractor.identifier,
+                });
             }
 
             const topTracks = searchResult.tracks.slice(0, 10);
@@ -92,6 +111,8 @@ module.exports = {
 
                     const selectedIndex = parseInt(i.values[0]);
                     const selectedTrack = topTracks[selectedIndex];
+
+                    console.log(selectedTrack);
 
                     const queue = player.nodes.get(interaction.guildId) ?? player.nodes.create(interaction.guild, {
                         metadata: interaction,

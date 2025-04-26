@@ -1,10 +1,9 @@
 // Require the necessary discord.js classes
 const { Client, Collection, GatewayIntentBits, EmbedBuilder} = require('discord.js');
 const { Player, GuildQueueEvent } = require("discord-player");
-const { AttachmentExtractor, DefaultExtractors} = require('@discord-player/extractor');
+const { AttachmentExtractor, SpotifyExtractor } = require('@discord-player/extractor');
 const path = require("path");
 const fs = require("fs");
-const { MainCustomExtractor } = require("./custom-audio-extractors/mainExtractor");
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
 
@@ -70,6 +69,7 @@ player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
 async function loadExt() {
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
+
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
              uri: process.env.PROXY_URI
@@ -80,6 +80,8 @@ async function loadExt() {
             useClient: "IOS"
         }
     });
+
+    await player.extractors.register(SpotifyExtractor);
 }
 
 loadExt()

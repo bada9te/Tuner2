@@ -5,7 +5,7 @@ const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
 const path = require("path");
 const fs = require("fs");
-const {AttachmentExtractor} = require("@discord-player/extractor");
+const {AttachmentExtractor, SpotifyExtractor} = require("@discord-player/extractor");
 
 
 
@@ -71,6 +71,7 @@ player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
 async function loadPlayerExtractors() {
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
+    await player.extractors.register(SpotifyExtractor);
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI

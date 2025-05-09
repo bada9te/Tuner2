@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
 const { useMainPlayer } = require('discord-player');
 const identifyExtractorEngine = require("../../utils/identifyExtractorEngine");
+const {SpotifyExtractor} = require("@discord-player/extractor");
 
 
 module.exports = {
@@ -68,31 +69,38 @@ module.exports = {
 
 
             const topTracks = searchResult.tracks.slice(0, 10);
-            const menu = new StringSelectMenuBuilder()
-                .setCustomId('track_select')
-                .setPlaceholder('Choose a track to play')
-                .addOptions(
-                    topTracks.map((track, index) => {
-                        return {
-                            label: `[${track.duration}] ${track.title.slice(0, 80)}`,
-                            description: track.author.slice(0, 50),
-                            value: index.toString(),
-                        }
-                    })
-                );
 
-            const row = new ActionRowBuilder().addComponents(menu);
-
-            await interaction.followUp({
+            let timeLeft = 60;
+            const message = await interaction.followUp({
                 content: 'Select a track to play:',
-                components: [row],
+                components: [getSelectRow(timeLeft, topTracks)],
+                fetchReply: true
             });
 
             const collector = interaction.channel.createMessageComponentCollector({
                 componentType: ComponentType.StringSelect,
-                time: 15000,
+                time: 60000,
                 max: 1,
             });
+
+            const interval = setInterval(async () => {
+                timeLeft--;
+
+                if (timeLeft <= 0) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                try {
+                    await message.edit({
+                        components: [getSelectRow(timeLeft, topTracks)],
+                    });
+                } catch (e) {
+                    console.warn('Failed to update placeholder:', e);
+                    clearInterval(interval);
+                }
+            }, 1000);
+
 
             collector.on('collect', async i => {
                 if (i.user.id !== interaction.user.id) {
@@ -104,29 +112,25 @@ module.exports = {
                 const selectedIndex = parseInt(i.values[0]);
                 const selectedTrack = topTracks[selectedIndex];
 
-                console.log(selectedTrack);
-
-                const queue = player.nodes.get(interaction.guildId) ?? player.nodes.create(interaction.guild, {
-                    metadata: interaction,
-                    selfDeaf: true,
-                    volume: 100,
-                });
-
-                if (!queue.connection) await queue.connect(channel);
-
-                queue.addTrack(selectedTrack);
-
-                if (!queue.isPlaying()) {
-                    await queue.node.play();
-                }
-
                 try {
+                    // ✅ Actually play the track
+                    await player.play(channel, selectedTrack, {
+                        nodeOptions: {
+                            metadata: interaction,
+                            leaveOnEnd: true
+                        }
+                    });
+
                     await interaction.editReply({
                         content: `Enqueued: **${selectedTrack.title}**`,
                         components: [],
                     });
                 } catch (err) {
-                    console.warn('Could not update interaction:', err);
+                    console.warn('Playback error:', err);
+                    await interaction.editReply({
+                        content: 'Failed to play the selected track.',
+                        components: [],
+                    });
                 }
             });
 
@@ -149,3 +153,20 @@ module.exports = {
         }
     },
 };
+
+
+// Create select menu with dynamic placeholder
+function getSelectRow(secondsRemaining, topTracks) {
+    const menu = new StringSelectMenuBuilder()
+        .setCustomId('track_select')
+        .setPlaceholder(`Choose a track (${secondsRemaining}s left)`)
+        .addOptions(
+            topTracks.map((track, index) => ({
+                label: `[${track.duration}] ${track.title.slice(0, 80)}`,
+                description: track.author.slice(0, 50),
+                value: index.toString(),
+            }))
+        );
+
+    return new ActionRowBuilder().addComponents(menu);
+}

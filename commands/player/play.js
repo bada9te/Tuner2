@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
-const { useMainPlayer } = require('discord-player');
+const { useMainPlayer, QueryType } = require('discord-player');
 const identifyExtractorEngine = require("../../utils/identifyExtractorEngine");
 const {SpotifyExtractor} = require("@discord-player/extractor");
 
@@ -10,8 +10,8 @@ module.exports = {
         .setName('play')
         .setDescription('Searches the track by provided query.')
         .addStringOption(option =>
-            option.setName('src')
-                .setDescription('Song link or text query')
+            option.setName('query')
+                .setDescription('Youtube video link or text query')
                 .setRequired(false)
         )
         .addAttachmentOption(option =>
@@ -40,7 +40,7 @@ module.exports = {
             return interaction.reply('I do not have permission to join and speak in your voice channel!');
         }
 
-        const query = interaction.options.getString('src');
+        const query = interaction.options.getString('query');
         const attachment = interaction.options.getAttachment('file'); // Get the attachment if provided
         await interaction.deferReply();
 
@@ -55,12 +55,12 @@ module.exports = {
             console.log({searchEngine})
 
             if (!searchEngine) {
-                return interaction.followUp('Platform is not supported yet.');
+                return interaction.followUp('Platform is not supported.');
             }
+
 
             let searchResult = await player.search(url, {
                 requestedBy: interaction.user,
-                // searchEngine
             });
 
             if (!searchResult || !searchResult.tracks.length) {
@@ -69,84 +69,89 @@ module.exports = {
 
 
             const topTracks = searchResult.tracks.slice(0, 10);
+            let interval = undefined;
 
-            let timeLeft = 60;
-            const message = await interaction.followUp({
-                content: 'Select a track to play:',
-                components: [getSelectRow(timeLeft, topTracks)],
-                fetchReply: true
-            });
+            if (topTracks.length > 1) {
+                let timeLeft = 60;
+                const message = await interaction.followUp({
+                    content: 'Select a track to play:',
+                    components: [getSelectRow(timeLeft, topTracks)],
+                    fetchReply: true
+                });
 
-            const collector = interaction.channel.createMessageComponentCollector({
-                componentType: ComponentType.StringSelect,
-                time: 60000,
-                max: 1,
-            });
+                interval = setInterval(async () => {
+                    timeLeft--;
 
-            const interval = setInterval(async () => {
-                timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(interval);
+                        return;
+                    }
 
-                if (timeLeft <= 0) {
-                    clearInterval(interval);
-                    return;
-                }
-
-                try {
-                    await message.edit({
-                        components: [getSelectRow(timeLeft, topTracks)],
-                    });
-                } catch (e) {
-                    console.warn('Failed to update placeholder:', e);
-                    clearInterval(interval);
-                }
-            }, 1000);
-
-
-            collector.on('collect', async i => {
-                if (i.user.id !== interaction.user.id) {
-                    return i.reply({ content: 'This menu is not for you!', ephemeral: true });
-                }
-
-                await i.deferUpdate(); // prevent interaction expiration
-
-                const selectedIndex = parseInt(i.values[0]);
-                const selectedTrack = topTracks[selectedIndex];
-
-                try {
-                    // ✅ Actually play the track
-                    await player.play(channel, selectedTrack, {
-                        nodeOptions: {
-                            metadata: interaction,
-                            leaveOnEnd: true
-                        }
-                    });
-
-                    await interaction.editReply({
-                        content: `Enqueued: **${selectedTrack.title}**`,
-                        components: [],
-                    });
-                } catch (err) {
-                    console.warn('Playback error:', err);
-                    await interaction.editReply({
-                        content: 'Failed to play the selected track.',
-                        components: [],
-                    });
-                }
-            });
-
-
-            collector.on('end', async collected => {
-                if (collected.size === 0) {
                     try {
+                        await message.edit({
+                            components: [getSelectRow(timeLeft, topTracks)],
+                        });
+                    } catch (e) {
+                        console.warn('Failed to update placeholder:', e);
+                        clearInterval(interval);
+                    }
+                }, 1000);
+
+                const collector = interaction.channel.createMessageComponentCollector({
+                    componentType: ComponentType.StringSelect,
+                    time: 60000,
+                    max: 1,
+                });
+
+                collector.on('collect', async i => {
+                    if (i.user.id !== interaction.user.id) {
+                        return i.reply({ content: 'This menu is not for you!', ephemeral: true });
+                    }
+
+                    await i.deferUpdate(); // prevent interaction expiration
+
+                    const selectedIndex = parseInt(i.values[0]);
+                    const selectedTrack = topTracks[selectedIndex];
+
+                    try {
+                        interval && clearInterval(interval);
+
+                        await playTrackAndRespondMsg(
+                            player,
+                            channel,
+                            selectedTrack,
+                            interaction
+                        );
+                    } catch (err) {
+                        console.warn('Playback error:', err);
                         await interaction.editReply({
-                            content: 'No selection made in time.',
+                            content: 'Failed to play the selected track.',
                             components: [],
                         });
-                    } catch (err) {
-                        console.warn('Failed to edit reply after collector timeout:', err);
                     }
-                }
-            });
+                });
+
+                collector.on('end', async collected => {
+                    if (collected.size === 0) {
+                        try {
+                            await interaction.editReply({
+                                content: 'No selection made in time.',
+                                components: [],
+                            });
+                        } catch (err) {
+                            console.warn('Failed to edit reply after collector timeout:', err);
+                        }
+                    }
+                });
+            } else {
+                const selectedTrack = topTracks[0];
+                await playTrackAndRespondMsg(
+                    player,
+                    channel,
+                    selectedTrack,
+                    interaction
+                );
+            }
         } catch (e) {
             console.error(e);
             return interaction.followUp('Something went wrong while trying to play the track.');
@@ -169,4 +174,21 @@ function getSelectRow(secondsRemaining, topTracks) {
         );
 
     return new ActionRowBuilder().addComponents(menu);
+}
+
+
+async function playTrackAndRespondMsg(player, channel, track, interaction) {
+    // ✅ Actually play the track
+    await player.play(channel, track, {
+        nodeOptions: {
+            metadata: interaction,
+            leaveOnEnd: true,
+            leaveOnEndCooldown: true
+        }
+    });
+
+    await interaction.editReply({
+        content: `Enqueued: **${track.title}**`,
+        components: [],
+    });
 }

@@ -1,15 +1,17 @@
 // Require the necessary discord.js classes
 const { Client, Collection, GatewayIntentBits, EmbedBuilder} = require('discord.js');
 const { Player, GuildQueueEvent } = require("discord-player");
-const { AttachmentExtractor, SpotifyExtractor } = require('@discord-player/extractor');
-const path = require("path");
-const fs = require("fs");
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
+const path = require("path");
+const fs = require("fs");
+const {AttachmentExtractor} = require("@discord-player/extractor");
+
+
+
 
 require('dotenv').config();
 
-// JSON.stringify = require('safe-stable-stringify')
 
 // Create a new client instance
 const client = new Client({
@@ -29,7 +31,7 @@ const player = new Player(client);
 player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
     const { channel } = queue.metadata;
     console.log(`🎵 Playing: ${track.title}`);
-    console.log(track)
+    // console.log(track)
     const embed = new EmbedBuilder()
         .setColor(0x495e35)
         .setTitle(track.title)
@@ -66,13 +68,12 @@ player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
 });
 
 
-async function loadExt() {
+async function loadPlayerExtractors() {
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
-
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
-             uri: process.env.PROXY_URI
+            uri: process.env.PROXY_URI
         }),
         cookie: process.env.YT_CRE,
         // generateWithPoToken: true,
@@ -80,11 +81,11 @@ async function loadExt() {
             useClient: "IOS"
         }
     });
-
-    await player.extractors.register(SpotifyExtractor);
+    console.log('Extractors loaded:', [...player.extractors.store.keys()]);
 }
 
-loadExt()
+// apply commands and player extractors
+loadPlayerExtractors()
     .then(_ => {
         // Retrieve commands
         const foldersPath = path.join(__dirname, 'commands');

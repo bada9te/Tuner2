@@ -55,7 +55,7 @@ module.exports = {
             console.log({searchEngine})
 
             if (!searchEngine) {
-                // return interaction.followUp('Platform is not supported.');
+                return interaction.followUp('Platform is not supported.');
             }
 
 

@@ -1,5 +1,5 @@
 const {YoutubeiExtractor} = require("discord-player-youtubei");
-const {AttachmentExtractor} = require("@discord-player/extractor");
+const {AttachmentExtractor, SpotifyExtractor} = require("@discord-player/extractor");
 
 
 function identifyExtractorEngine(url) {
@@ -8,7 +8,7 @@ function identifyExtractorEngine(url) {
     }
 
     if (url.startsWith('https://open.spotify.com')) {
-        return undefined;
+        return `ext:${SpotifyExtractor.identifier}`;
     }
 
     if (url.startsWith('https://soundcloud.com')) {

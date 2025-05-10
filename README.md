@@ -1,2 +1,2 @@
 # Tuner2
-Discord music-streaming bot.
+Hey, wanna listen to some tunes?

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
 
 module.exports = {
@@ -24,7 +24,25 @@ module.exports = {
             return interaction.reply('No song is currently playing.');
         }
 
+        const embed = new EmbedBuilder()
+            // .setColor(0x495e35)
+            .setDescription(`[${currentSong.title}](${currentSong.url})`)
+            .setThumbnail(currentSong.thumbnail)
+            .setAuthor({
+                name: `Now playing - ${currentSong.author}`,
+            })
+            .addFields(
+                { name: 'Duration', value: currentSong.duration, inline: true },
+                { name: 'Views', value: currentSong.views.toString(), inline: true },
+            )
+            .setFooter({
+                text: `Requested by ${currentSong.requestedBy.username}`,
+                iconURL: currentSong.requestedBy.avatarURL()
+            })
+
         // Send the currently playing song information
-        return interaction.reply(`Now playing: ${currentSong.cleanTitle}`);
+        return interaction.reply({
+            embeds: [embed],
+        });
     }
 }

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
 
 module.exports = {
@@ -11,19 +11,43 @@ module.exports = {
         const queue = useQueue();
 
         if (!queue) {
-            return interaction.reply(
-                'This server does not have an active player session.',
-            );
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("This server does not have an active player session.")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         if (!queue.isPlaying()) {
-            return interaction.reply('There is no track playing.');
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("There is no track playing.")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         // Skip the current track
         queue.node.skip();
 
         // Send a confirmation message
-        return interaction.reply('The current song has been skipped.');
+        const embed = new EmbedBuilder()
+            .setDescription('The current song has been skipped.')
+            .setAuthor({
+                name: `Player status`,
+            });
+
+        return interaction.reply({
+            embeds: [embed],
+        });
     }
 }

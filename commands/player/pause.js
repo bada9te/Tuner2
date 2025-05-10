@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue, useTimeline } = require('discord-player');
 
 module.exports = {
@@ -11,9 +11,16 @@ module.exports = {
         const timeline = useTimeline();
 
         if (!timeline) {
-            return interaction.reply(
-                'This server does not have an active player session.',
-            );
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("This server does not have an active player session.")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         // Invert the pause state
@@ -22,8 +29,14 @@ module.exports = {
         wasPaused ? timeline.resume() : timeline.pause();
 
         // If the timeline was previously paused, the queue is now back to playing
-        return interaction.reply(
-            `The player is now ${wasPaused ? 'playing' : 'paused'}.`,
-        );
+        const embed = new EmbedBuilder()
+            .setDescription(`The player is now ${wasPaused ? 'playing' : 'paused'}.`)
+            .setAuthor({
+                name: `Player status`,
+            });
+
+        return interaction.reply({
+            embeds: [embed],
+        });
     }
 }

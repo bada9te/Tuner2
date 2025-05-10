@@ -55,6 +55,7 @@ module.exports = async(client) => {
     });
 
     player.events.on(GuildQueueEvent.AudioTrackAdd, async(queue, track) => {
+        /*
         const { channel } = queue.metadata;
         const embed = new EmbedBuilder()
             //.setColor(0x947e2e)
@@ -68,6 +69,7 @@ module.exports = async(client) => {
             })
         // .setTimestamp();
         await channel.send({ embeds: [embed] });
+        */
     });
 
     player.events.on(GuildQueueEvent.Error, (queue, error) => {

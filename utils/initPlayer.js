@@ -4,7 +4,6 @@ const { EmbedBuilder} = require('discord.js');
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
 const { AttachmentExtractor, SpotifyExtractor } = require("@discord-player/extractor");
-const createSpotifyStream = require("./createSpotifyStream");
 require('dotenv').config();
 
 
@@ -18,7 +17,7 @@ module.exports = async(client) => {
         //clientId: process.env.SPOTIFY_CLIENT_ID,
         //clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
         createStream: async(ext, url) => {
-             return await createSpotifyStream(url);
+            return null;
         }
     });
     await player.extractors.register(YoutubeiExtractor, {
@@ -36,17 +35,13 @@ module.exports = async(client) => {
     // Handle the event when a track starts playing
     player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
         const { channel } = queue.metadata;
-        console.log(`🎵 Playing: ${track.title}`);
-        // console.log(track)
         const embed = new EmbedBuilder()
             .setColor(0x495e35)
-            .setTitle(track.title)
-            .setDescription(track.description)
+            .setDescription(`[${track.title}](${track.url})`)
             .setThumbnail(track.thumbnail)
             .setAuthor({
                 name: track.author,
             })
-            .setURL(track.url)
             .addFields(
                 { name: 'Duration', value: track.duration, inline: true },
                 { name: 'Views', value: track.views.toString(), inline: true },
@@ -55,15 +50,25 @@ module.exports = async(client) => {
                 text: `Requested by ${track.requestedBy.username}`,
                 iconURL: track.requestedBy.avatarURL()
             })
-            .setTimestamp();
+            // .setTimestamp();
         await channel.send({ embeds: [embed] });
     });
 
-    // Handle the event when a track finishes playing
-    player.events.on(GuildQueueEvent.PlayerFinish, async (queue, track) => {
-        console.log(`Finished playing ${track.title}`);
+    player.events.on(GuildQueueEvent.AudioTrackAdd, async(queue, track) => {
+        const { channel } = queue.metadata;
+        const embed = new EmbedBuilder()
+            //.setColor(0x947e2e)
+            .setDescription(`[${track.title}](${track.url})`)
+            .setAuthor({
+                name: "Added to the queue",
+            })
+            .setFooter({
+                text: `Requested by ${track.requestedBy.username}`,
+                iconURL: track.requestedBy.avatarURL()
+            })
+        // .setTimestamp();
+        await channel.send({ embeds: [embed] });
     });
-
 
     player.events.on(GuildQueueEvent.Error, (queue, error) => {
         console.error(`❌ Error: ${error.message}`);

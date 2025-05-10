@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
 
 
@@ -12,13 +12,28 @@ module.exports = {
         const queue = useQueue();
 
         if (!queue) {
-            return interaction.reply(
-                'This server does not have an active player session.',
-            );
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("This server does not have an active player session.")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         queue.clear();
 
-        return interaction.reply(`Queue cleared.`);
+        const embed = new EmbedBuilder()
+            .setDescription("Server's player queue has been cleared.")
+            .setAuthor({
+                name: `Server queue`,
+            });
+
+        return interaction.reply({
+            embeds: [embed],
+        });
     }
 }

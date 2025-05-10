@@ -1,4 +1,6 @@
-const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType,
+    EmbedBuilder
+} = require('discord.js');
 const { useMainPlayer, QueryType } = require('discord-player');
 const identifyExtractorEngine = require("../../utils/identifyExtractorEngine");
 const {SpotifyExtractor} = require("@discord-player/extractor");
@@ -45,7 +47,15 @@ module.exports = {
         await interaction.deferReply();
 
         if (!query && !attachment) {
-            return interaction.followUp('Required parameter (query / file) was not provided!');
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("Required parameter (query / file) was not provided!")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+            return interaction.followUp({
+                embeds: [embed],
+            });
         }
 
         const url = query || attachment.url;
@@ -55,7 +65,15 @@ module.exports = {
             console.log({searchEngine})
 
             if (!searchEngine) {
-                return interaction.followUp('Platform is not supported.');
+                const embed = new EmbedBuilder()
+                    .setColor(0x942e2e)
+                    .setDescription("Platform is not supported.")
+                    .setAuthor({
+                        name: `Execution reverted`,
+                    });
+                return interaction.followUp({
+                    embeds: [embed],
+                });
             }
 
 
@@ -64,7 +82,15 @@ module.exports = {
             });
 
             if (!searchResult || !searchResult.tracks.length) {
-                return interaction.followUp('No tracks found for your query.');
+                const embed = new EmbedBuilder()
+                    .setColor(0x942e2e)
+                    .setDescription("Platform is not supported.")
+                    .setAuthor({
+                        name: `Execution reverted`,
+                    });
+                return interaction.followUp({
+                    embeds: [embed],
+                });
             }
 
 
@@ -124,9 +150,14 @@ module.exports = {
                         );
                     } catch (err) {
                         console.warn('Playback error:', err);
-                        await interaction.editReply({
-                            content: 'Failed to play the selected track.',
-                            components: [],
+                        const embed = new EmbedBuilder()
+                            .setColor(0x942e2e)
+                            .setDescription("Something went wrong while trying to play the track.")
+                            .setAuthor({
+                                name: `Execution reverted`,
+                            });
+                        return interaction.followUp({
+                            embeds: [embed],
                         });
                     }
                 });
@@ -134,10 +165,7 @@ module.exports = {
                 collector.on('end', async collected => {
                     if (collected.size === 0) {
                         try {
-                            await interaction.editReply({
-                                content: 'No selection made in time.',
-                                components: [],
-                            });
+                            await interaction.deleteReply();
                         } catch (err) {
                             console.warn('Failed to edit reply after collector timeout:', err);
                         }
@@ -154,7 +182,15 @@ module.exports = {
             }
         } catch (e) {
             console.error(e);
-            return interaction.followUp('Something went wrong while trying to play the track.');
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("Something went wrong while trying to play the track.")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+            return interaction.followUp({
+                embeds: [embed],
+            });
         }
     },
 };
@@ -187,8 +223,5 @@ async function playTrackAndRespondMsg(player, channel, track, interaction) {
         fallbackSearchEngine: "autoSearch"
     });
 
-    await interaction.editReply({
-        content: `Enqueued: **${track.title}**`,
-        components: [],
-    });
+    await interaction.deleteReply();
 }

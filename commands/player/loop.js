@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { QueueRepeatMode, useQueue } = require('discord-player');
 
 
@@ -36,9 +36,16 @@ module.exports = {
         const queue = useQueue();
 
         if (!queue) {
-            return interaction.reply(
-                'This server does not have an active player session.',
-            );
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("This server does not have an active player session.")
+                .setAuthor({
+                    name: `Execution reverted`,
+                });
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         // Get the loop mode
@@ -52,6 +59,13 @@ module.exports = {
         )?.[0] ?? 'UNKNOWN';
 
         // Send a confirmation message
-        return interaction.reply(`Loop mode set to: ${modeName}`);
+        const embed = new EmbedBuilder()
+            .setDescription(`Loop mode set to: ${modeName}`)
+            .setAuthor({
+                name: `Player loop mode`,
+            });
+        return interaction.reply({
+            embeds: [embed],
+        });
     }
 }

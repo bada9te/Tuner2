@@ -15,10 +15,11 @@ module.exports = async(client) => {
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(SpotifyExtractor, {
+
         clientId: process.env.SPOTIFY_CLIENT_ID,
         clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
         createStream: async(ext, url) => {
-            return await createSpotifyStream(url);
+             return await createSpotifyStream(url);
         }
     });
     await player.extractors.register(YoutubeiExtractor, {

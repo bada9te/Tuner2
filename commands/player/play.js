@@ -55,7 +55,7 @@ module.exports = {
             console.log({searchEngine})
 
             if (!searchEngine) {
-                return interaction.followUp('Platform is not supported.');
+                // return interaction.followUp('Platform is not supported.');
             }
 
 
@@ -183,8 +183,8 @@ async function playTrackAndRespondMsg(player, channel, track, interaction) {
         nodeOptions: {
             metadata: interaction,
             leaveOnEnd: true,
-            leaveOnEndCooldown: true
-        }
+        },
+        fallbackSearchEngine: "autoSearch"
     });
 
     await interaction.editReply({

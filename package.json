@@ -18,7 +18,9 @@
     "start": "node ./index.js"
   },
   "dependencies": {
+    "@discord-player/equalizer": "^7.1.0",
     "@discord-player/extractor": "^7.1.0",
+    "@discord-player/utils": "^7.1.0",
     "@discordjs/opus": "^0.10.0",
     "@discordjs/voice": "^0.14.0",
     "@distube/ytdl-core": "^4.16.9",

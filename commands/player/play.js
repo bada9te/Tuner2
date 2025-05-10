@@ -165,7 +165,17 @@ module.exports = {
                 collector.on('end', async collected => {
                     if (collected.size === 0) {
                         try {
-                            await interaction.deleteReply();
+                            const embed = new EmbedBuilder()
+                                .setColor(0x942e2e)
+                                .setDescription("No selection made in time.")
+                                .setAuthor({
+                                    name: `Execution cancelled`,
+                                });
+                            return interaction.editReply({
+                                content: "",
+                                embeds: [embed],
+                                components: []
+                            });
                         } catch (err) {
                             console.warn('Failed to edit reply after collector timeout:', err);
                         }
@@ -188,8 +198,10 @@ module.exports = {
                 .setAuthor({
                     name: `Execution reverted`,
                 });
-            return interaction.followUp({
+            return interaction.editReply({
+                content: "",
                 embeds: [embed],
+                components: []
             });
         }
     },
@@ -223,5 +235,16 @@ async function playTrackAndRespondMsg(player, channel, track, interaction) {
         fallbackSearchEngine: "autoSearch"
     });
 
-    await interaction.deleteReply();
+    const embed = new EmbedBuilder()
+        //.setColor(0x947e2e)
+        .setDescription(`[${track.title}](${track.url})`)
+        .setAuthor({
+            name: "Added to the queue",
+        });
+
+    return interaction.editReply({
+        content: "",
+        embeds: [embed],
+        components: []
+    });
 }

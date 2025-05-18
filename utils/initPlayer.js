@@ -4,6 +4,7 @@ const { EmbedBuilder} = require('discord.js');
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
 const { AttachmentExtractor, SpotifyExtractor } = require("@discord-player/extractor");
+const getValidGoogleOauth = require("./getValidGoogleOauth");
 require('dotenv').config();
 
 
@@ -24,12 +25,30 @@ module.exports = async(client) => {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI
         }),
-        cookie: process.env.YT_CRE,
+        cookie: await getValidGoogleOauth(),
         // generateWithPoToken: true,
         streamOptions: {
             useClient: "IOS",
         }
     });
+
+    // re-init youtube extractor every 1 hour to avoid expired CRE 
+    setInterval(async() => {
+        await player.extractors.unregister(YoutubeiExtractor.identifier);
+        await player.extractors.register(YoutubeiExtractor, {
+            proxy: new ProxyAgent({
+                uri: process.env.PROXY_URI
+            }),
+            cookie: await getValidGoogleOauth(),
+            streamOptions: {
+                useClient: "IOS",
+            }
+        });
+
+        console.log("[GOOGLE_TOKENS_REFRESH] ✅ YouTube extractor registered (re-init) with new access_token");
+    }, 30000);
+
+
     console.log('Extractors loaded:', [...player.extractors.store.keys()]);
 
     // Handle the event when a track starts playing

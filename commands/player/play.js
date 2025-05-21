@@ -84,7 +84,7 @@ module.exports = {
             if (!searchResult || !searchResult.tracks.length) {
                 const embed = new EmbedBuilder()
                     .setColor(0x942e2e)
-                    .setDescription("Platform is not supported.")
+                    .setDescription("No tracks found for your query.")
                     .setAuthor({
                         name: `Execution reverted`,
                     });
@@ -226,13 +226,14 @@ function getSelectRow(secondsRemaining, topTracks) {
 
 
 async function playTrackAndRespondMsg(player, channel, track, interaction) {
+    // console.log({track});
     // ✅ Actually play the track
     await player.play(channel, track, {
         nodeOptions: {
             metadata: interaction,
             leaveOnEnd: true,
         },
-        fallbackSearchEngine: "autoSearch"
+        fallbackSearchEngine: "autoSearch",
     });
 
     const embed = new EmbedBuilder()

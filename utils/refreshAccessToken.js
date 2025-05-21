@@ -36,17 +36,20 @@ module.exports = async function refreshAccessToken() {
         params: {
             client_id: process.env.GOOGLE_CLIENT_ID,
             client_secret: process.env.GOOGLE_CLIENT_SECRET,
-            refresh_token: parsedOauthString["refresh_token"],
+            refresh_token: parsedOauthString.refresh_token,
             grant_type: 'refresh_token'
         },
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    console.log('[GOOGLE_TOKENS_REFRESH] 🔄 New access token:', response.data);
+    console.log('[GOOGLE_TOKENS_REFRESH] 🔄 New access token grabbed!');
 
     return {
         access_token: response.data.access_token,
-        full_response_parsed: tokensObjectToString(response.data),
+        full_response_parsed: tokensObjectToString({ 
+            ...response.data, 
+            refresh_token: parsedOauthString.refresh_token 
+        }),
         full_response: response.data
     };
 }

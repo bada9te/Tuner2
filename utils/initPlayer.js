@@ -3,10 +3,11 @@ const { Player } = require("discord-player");
 const { EmbedBuilder} = require('discord.js');
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
-const { AttachmentExtractor, SpotifyExtractor } = require("@discord-player/extractor");
+const { AttachmentExtractor, SpotifyExtractor, SoundCloudExtractor } = require("@discord-player/extractor");
 const getValidGoogleOauth = require("./getValidGoogleOauth");
+const OverriddenSoundCloudExtractor = require("../extractors/overriddenSoundCloud");
 require('dotenv').config();
-
+ 
 
 module.exports = async(client) => {
     // Player instance (handles all queues and guilds)
@@ -21,6 +22,9 @@ module.exports = async(client) => {
             return null;
         }
     });
+
+    await player.extractors.register(OverriddenSoundCloudExtractor);
+
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI
@@ -46,7 +50,7 @@ module.exports = async(client) => {
         });
 
         console.log("[GOOGLE_TOKENS_REFRESH] ✅ YouTube extractor registered (re-init) with new access_token");
-    }, 30000);
+    }, 45 * 60 * 1000);
 
 
     console.log('Extractors loaded:', [...player.extractors.store.keys()]);
@@ -57,7 +61,6 @@ module.exports = async(client) => {
         const embed = new EmbedBuilder()
             .setColor(0x495e35)
             .setDescription(`[${track.title}](${track.url})`)
-            .setThumbnail(track.thumbnail)
             .setAuthor({
                 name: track.author,
             })
@@ -70,6 +73,8 @@ module.exports = async(client) => {
                 iconURL: track.requestedBy.avatarURL()
             })
             // .setTimestamp();
+        track?.thumbnail && embed.setThumbnail(track.thumbnail);
+
         await channel.send({ embeds: [embed] });
     });
 

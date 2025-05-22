@@ -38,10 +38,7 @@ module.exports = {
         if (!queue) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("This server does not have an active player session.")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("❌ This server does not have an active player session.")
 
             return interaction.reply({
                 embeds: [embed],
@@ -60,10 +57,7 @@ module.exports = {
 
         // Send a confirmation message
         const embed = new EmbedBuilder()
-            .setDescription(`Loop mode set to: ${modeName}`)
-            .setAuthor({
-                name: `Player loop mode`,
-            });
+            .setDescription(`🔁 Loop mode set to: ${modeName}`);
         return interaction.reply({
             embeds: [embed],
         });

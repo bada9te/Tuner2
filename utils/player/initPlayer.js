@@ -3,9 +3,10 @@ const { Player } = require("discord-player");
 const { EmbedBuilder} = require('discord.js');
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
-const { AttachmentExtractor, SpotifyExtractor, SoundCloudExtractor } = require("@discord-player/extractor");
-const getValidGoogleOauth = require("./getValidGoogleOauth");
-const OverriddenSoundCloudExtractor = require("../extractors/overriddenSoundCloud");
+const { AttachmentExtractor } = require("@discord-player/extractor");
+const getValidGoogleOauth = require("../youtube/getValidGoogleOauth");
+const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
+const OverriddenSpotifyExtractor = require("../../extractors/overridenSpotify");
 require('dotenv').config();
  
 
@@ -15,16 +16,9 @@ module.exports = async(client) => {
 
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
-    await player.extractors.register(SpotifyExtractor, {
-        //clientId: process.env.SPOTIFY_CLIENT_ID,
-        //clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-        createStream: async(ext, url) => {
-            return null;
-        }
-    });
+    await player.extractors.register(OverriddenSpotifyExtractor);
 
     await player.extractors.register(OverriddenSoundCloudExtractor);
-
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI
@@ -62,11 +56,11 @@ module.exports = async(client) => {
             .setColor(0x495e35)
             .setDescription(`[${track.title}](${track.url})`)
             .setAuthor({
-                name: track.author,
+                name: `🍺 Started playing`,
             })
             .addFields(
-                { name: 'Duration', value: track.duration, inline: true },
-                { name: 'Views', value: track.views.toString(), inline: true },
+                { name: '⏱️ Duration', value: track.duration, inline: true },
+                { name: '👁️ Views', value: track.views.toString(), inline: true },
             )
             .setFooter({
                 text: `Requested by ${track.requestedBy.username}`,

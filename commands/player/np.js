@@ -11,9 +11,13 @@ module.exports = {
         const queue = useQueue();
 
         if (!queue) {
-            return interaction.reply(
-                'This server does not have an active player session.',
-            );
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("❌ This server does not have an active player session.")
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         // Get the currently playing song
@@ -21,7 +25,13 @@ module.exports = {
 
         // Check if there is a song playing
         if (!currentSong) {
-            return interaction.reply('No song is currently playing.');
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("❌ No song is currently playing.")
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         const embed = new EmbedBuilder()
@@ -29,7 +39,7 @@ module.exports = {
             .setDescription(`[${currentSong.title}](${currentSong.url})`)
             .setThumbnail(currentSong.thumbnail)
             .setAuthor({
-                name: `Now playing - ${currentSong.author}`,
+                name: `📋 Now playing - ${currentSong.author}`,
             })
             .addFields(
                 { name: 'Duration', value: currentSong.duration, inline: true },

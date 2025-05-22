@@ -1,7 +1,7 @@
 // Require the necessary discord.js classes
 const { Client, GatewayIntentBits} = require('discord.js');
-const applyClientCommandsAndEvents = require("./utils/applyClientCommandsAndEvents");
-const initPlayer = require("./utils/initPlayer");
+const applyClientCommandsAndEvents = require("./utils/bot/applyClientCommandsAndEvents");
+const initPlayer = require("./utils/player/initPlayer");
 require('dotenv').config();
 
 

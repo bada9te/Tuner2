@@ -2,8 +2,9 @@ const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelect
     EmbedBuilder
 } = require('discord.js');
 const { useMainPlayer, QueryType } = require('discord-player');
-const identifyExtractorEngine = require("../../utils/identifyExtractorEngine");
+const identifyExtractorEngine = require("../../utils/player/identifyExtractorEngine");
 const {SpotifyExtractor} = require("@discord-player/extractor");
+const { YoutubeiExtractor } = require('discord-player-youtubei');
 
 
 module.exports = {
@@ -25,21 +26,27 @@ module.exports = {
         const player = useMainPlayer();
         const channel = interaction.member.voice.channel;
 
+        const embedErr = new EmbedBuilder()
+            .setColor(0x942e2e);
+
         if (!channel) {
-            return await interaction.reply('You are not connected to the voice channel!');
+            embedErr.setDescription("👀 You are not connected to the voice channel!");
+            return await interaction.followUp({ embeds: [embedErr] });
         }
 
         if (
             interaction.guild.members.me.voice.channel &&
             interaction.guild.members.me.voice.channel !== channel
         ) {
-            return interaction.reply('I am already playing in a different voice channel!');
+            embedErr.setDescription('🎵 I am already playing in a different voice channel!');
+            return await interaction.followUp({ embeds: [embedErr] });
         }
 
         const permissions = channel.permissionsFor(interaction.guild.members.me);
         if (!permissions.has(PermissionsBitField.Flags.Connect) ||
             !permissions.has(PermissionsBitField.Flags.Speak)) {
-            return interaction.reply('I do not have permission to join and speak in your voice channel!');
+            embedErr.setDescription('⛓️‍💥 I do not have permission to join and speak in your voice channel!');
+            return await interaction.followUp({ embeds: [embedErr] });
         }
 
         const query = interaction.options.getString('query');
@@ -49,10 +56,8 @@ module.exports = {
         if (!query && !attachment) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("Required parameter (query / file) was not provided!")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("♿ Required parameter (query / file) was not provided!");
+
             return interaction.followUp({
                 embeds: [embed],
             });
@@ -67,10 +72,8 @@ module.exports = {
             if (!searchEngine) {
                 const embed = new EmbedBuilder()
                     .setColor(0x942e2e)
-                    .setDescription("Platform is not supported.")
-                    .setAuthor({
-                        name: `Execution reverted`,
-                    });
+                    .setDescription("❌ Platform is not supported.")
+
                 return interaction.followUp({
                     embeds: [embed],
                 });
@@ -84,20 +87,21 @@ module.exports = {
             if (!searchResult || !searchResult.tracks.length) {
                 const embed = new EmbedBuilder()
                     .setColor(0x942e2e)
-                    .setDescription("No tracks found for your query.")
-                    .setAuthor({
-                        name: `Execution reverted`,
-                    });
+                    .setDescription("❌ No tracks found for your query, pls re-run your request if you are sure that the track exists.")
+
                 return interaction.followUp({
                     embeds: [embed],
                 });
             }
 
 
-            const topTracks = searchResult.tracks.slice(0, 10);
+            const topTracks = searchResult.tracks.slice(
+                0, 
+                searchEngine === `ext:${YoutubeiExtractor.identifier}` ? 10 : Infinity
+            );
             let interval = undefined;
 
-            if (topTracks.length > 1) {
+            if (topTracks.length > 1 && searchEngine === `ext:${YoutubeiExtractor.identifier}`) {
                 let timeLeft = 60;
                 const message = await interaction.followUp({
                     content: 'Select a track to play:',
@@ -152,10 +156,7 @@ module.exports = {
                         console.warn('Playback error:', err);
                         const embed = new EmbedBuilder()
                             .setColor(0x942e2e)
-                            .setDescription("Something went wrong while trying to play the track.")
-                            .setAuthor({
-                                name: `Execution reverted`,
-                            });
+                            .setDescription("❌ Something went wrong while trying to play the track.")
                         return interaction.followUp({
                             embeds: [embed],
                         });
@@ -167,10 +168,7 @@ module.exports = {
                         try {
                             const embed = new EmbedBuilder()
                                 .setColor(0x942e2e)
-                                .setDescription("No selection made in time.")
-                                .setAuthor({
-                                    name: `Execution cancelled`,
-                                });
+                                .setDescription("⏱️ No selection made in time.")
                             return interaction.editReply({
                                 content: "",
                                 embeds: [embed],
@@ -194,10 +192,8 @@ module.exports = {
             console.error(e);
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("Something went wrong while trying to play the track.")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("❌ Something went wrong while trying to play the track.")
+
             return interaction.editReply({
                 content: "",
                 embeds: [embed],
@@ -212,7 +208,7 @@ module.exports = {
 function getSelectRow(secondsRemaining, topTracks) {
     const menu = new StringSelectMenuBuilder()
         .setCustomId('track_select')
-        .setPlaceholder(`Choose a track (${secondsRemaining}s left)`)
+        .setPlaceholder(`🔍 Choose a track (${secondsRemaining}s left)`)
         .addOptions(
             topTracks.map((track, index) => ({
                 label: `[${track.duration}] ${track.title.slice(0, 80)}`,
@@ -238,10 +234,7 @@ async function playTrackAndRespondMsg(player, channel, track, interaction) {
 
     const embed = new EmbedBuilder()
         //.setColor(0x947e2e)
-        .setDescription(`[${track.title}](${track.url})`)
-        .setAuthor({
-            name: "Added to the queue",
-        });
+        .setDescription(`✏️ [${track.title}](${track.url})`);
 
     return interaction.editReply({
         content: "",

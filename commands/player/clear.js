@@ -14,10 +14,7 @@ module.exports = {
         if (!queue) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("This server does not have an active player session.")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("❌ This server does not have an active player session.");
 
             return interaction.reply({
                 embeds: [embed],
@@ -27,10 +24,7 @@ module.exports = {
         queue.clear();
 
         const embed = new EmbedBuilder()
-            .setDescription("Server's player queue has been cleared.")
-            .setAuthor({
-                name: `Server queue`,
-            });
+            .setDescription("💥 Server's player queue has been cleared.");
 
         return interaction.reply({
             embeds: [embed],

@@ -13,10 +13,7 @@ module.exports = {
         if (!queue) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("This server does not have an active player session.")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("❌ This server does not have an active player session.")
 
             return interaction.reply({
                 embeds: [embed],
@@ -26,10 +23,7 @@ module.exports = {
         if (!queue.isPlaying()) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("There is no track playing.")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("❌ There is no track playing.")
 
             return interaction.reply({
                 embeds: [embed],
@@ -41,10 +35,7 @@ module.exports = {
 
         // Send a confirmation message
         const embed = new EmbedBuilder()
-            .setDescription('The current song has been skipped.')
-            .setAuthor({
-                name: `Player status`,
-            });
+            .setDescription('⏭️ Skipped.')
 
         return interaction.reply({
             embeds: [embed],

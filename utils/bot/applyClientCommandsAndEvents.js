@@ -8,7 +8,7 @@ module.exports = (client) => {
     client.commands = new Collection();
 
     // Retrieve commands
-    const foldersPath = path.join(__dirname, '..', 'commands');
+    const foldersPath = path.join(__dirname, '..', '..', 'commands');
     const commandsFolders = fs.readdirSync(foldersPath);
 
     for (const folder of commandsFolders) {
@@ -21,13 +21,13 @@ module.exports = (client) => {
             if ('data' in command && 'execute' in command) {
                 client.commands.set(command.data.name, command);
             } else {
-                console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+                console.log(`🚩 [WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
             }
         }
     }
 
     // Add events to client
-    const eventsPath = path.join(__dirname, '..', 'events');
+    const eventsPath = path.join(__dirname, '..', '..', 'events');
     const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
     for (const file of eventFiles) {

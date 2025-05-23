@@ -13,10 +13,7 @@ module.exports = {
         if (!timeline) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("This server does not have an active player session.")
-                .setAuthor({
-                    name: `Execution reverted`,
-                });
+                .setDescription("❌ This server does not have an active player session.")
 
             return interaction.reply({
                 embeds: [embed],
@@ -30,10 +27,7 @@ module.exports = {
 
         // If the timeline was previously paused, the queue is now back to playing
         const embed = new EmbedBuilder()
-            .setDescription(`The player is now ${wasPaused ? 'playing' : 'paused'}.`)
-            .setAuthor({
-                name: `Player status`,
-            });
+            .setDescription(`${wasPaused ? '▶️' : '⏸️'} The player is now ${wasPaused ? 'playing' : 'paused'}.`)
 
         return interaction.reply({
             embeds: [embed],

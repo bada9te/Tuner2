@@ -4,18 +4,17 @@ module.exports = {
     name: Events.ClientReady,
     once: true,
     execute(client) {
-        console.log(`Ready! Logged in as ${client.user.tag}`);
+        console.log(`🍗🍉🏀 Logged in as ${client.user.tag}`);
 
-        /*
+        
         client.user.setPresence({
             activities: [
                 {
-                    name: 'name',
-                    type: 1,
-
+                    name: '🧙🏻‍♂️ Gandalf Sax Guy 10 Hours',
+                    type: 2,
                 },
             ],
         });
-        */
+        
     },
 };

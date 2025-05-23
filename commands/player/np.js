@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
+const formatSI = require('../../utils/common/formatSI');
 
 module.exports = {
     isPlayerCommand: true,
@@ -11,9 +12,13 @@ module.exports = {
         const queue = useQueue();
 
         if (!queue) {
-            return interaction.reply(
-                'This server does not have an active player session.',
-            );
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("❌ This server does not have an active player session.")
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         // Get the currently playing song
@@ -21,7 +26,13 @@ module.exports = {
 
         // Check if there is a song playing
         if (!currentSong) {
-            return interaction.reply('No song is currently playing.');
+            const embed = new EmbedBuilder()
+                .setColor(0x942e2e)
+                .setDescription("❌ No song is currently playing.")
+
+            return interaction.reply({
+                embeds: [embed],
+            });
         }
 
         const embed = new EmbedBuilder()
@@ -29,16 +40,13 @@ module.exports = {
             .setDescription(`[${currentSong.title}](${currentSong.url})`)
             .setThumbnail(currentSong.thumbnail)
             .setAuthor({
-                name: `Now playing - ${currentSong.author}`,
+                name: `📋 Now playing - ${currentSong.author}`,
             })
             .addFields(
-                { name: 'Duration', value: currentSong.duration, inline: true },
-                { name: 'Views', value: currentSong.views.toString(), inline: true },
+                { name: '⏱️ _Duration_', value: currentSong.duration, inline: true },
+                { name: '🎵 _Plays_', value: formatSI(currentSong.views), inline: true },
+                { name: '🔍 _Requested by_', value: `<@${currentSong.requestedBy.id}>`, inline: true }
             )
-            .setFooter({
-                text: `Requested by ${currentSong.requestedBy.username}`,
-                iconURL: currentSong.requestedBy.avatarURL()
-            })
 
         // Send the currently playing song information
         return interaction.reply({

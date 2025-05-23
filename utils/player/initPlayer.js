@@ -3,9 +3,13 @@ const { Player } = require("discord-player");
 const { EmbedBuilder} = require('discord.js');
 const { YoutubeiExtractor } = require("discord-player-youtubei");
 const { ProxyAgent } = require("undici");
-const { AttachmentExtractor, SpotifyExtractor } = require("@discord-player/extractor");
+const { AttachmentExtractor } = require("@discord-player/extractor");
+const getValidGoogleOauth = require("../youtube/getValidGoogleOauth");
+const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
+const OverriddenSpotifyExtractor = require("../../extractors/overridenSpotify");
+const formatSI = require("../common/formatSI");
 require('dotenv').config();
-
+ 
 
 module.exports = async(client) => {
     // Player instance (handles all queues and guilds)
@@ -13,44 +17,60 @@ module.exports = async(client) => {
 
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
-    await player.extractors.register(SpotifyExtractor, {
-        //clientId: process.env.SPOTIFY_CLIENT_ID,
-        //clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-        createStream: async(ext, url) => {
-            return null;
-        }
-    });
+    await player.extractors.register(OverriddenSpotifyExtractor);
+
+    await player.extractors.register(OverriddenSoundCloudExtractor);
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI
         }),
-        cookie: process.env.YT_CRE,
+        cookie: await getValidGoogleOauth(),
         // generateWithPoToken: true,
         streamOptions: {
             useClient: "IOS",
         }
     });
-    console.log('Extractors loaded:', [...player.extractors.store.keys()]);
+
+    // re-init youtube extractor every 1 hour to avoid expired CRE 
+    setInterval(async() => {
+        await player.extractors.unregister(YoutubeiExtractor.identifier);
+        await player.extractors.register(YoutubeiExtractor, {
+            proxy: new ProxyAgent({
+                uri: process.env.PROXY_URI
+            }),
+            cookie: await getValidGoogleOauth(),
+            streamOptions: {
+                useClient: "IOS",
+            }
+        });
+
+        console.log("⚙️  [GOOGLE_TOKENS_REFRESH] YouTube extractor registered (re-init) with new access_token");
+    }, 45 * 60 * 1000);
+
+
+    console.log('⚙️  Extractors loaded:', [...player.extractors.store.keys()]);
 
     // Handle the event when a track starts playing
     player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
         const { channel } = queue.metadata;
         const embed = new EmbedBuilder()
             .setColor(0x495e35)
-            .setDescription(`[${track.title}](${track.url})`)
-            .setThumbnail(track.thumbnail)
+            .setDescription(`**[${track.title}](${track.url})**`)
             .setAuthor({
-                name: track.author,
+                name: `🍺 Started playing`,
             })
             .addFields(
-                { name: 'Duration', value: track.duration, inline: true },
-                { name: 'Views', value: track.views.toString(), inline: true },
+                { name: '⏱️ _Duration_', value: track.duration, inline: true },
+                { name: '🎵 _Plays_', value: formatSI(track.views), inline: true },
+                { name: '🔍 _Requested by_', value: `<@${track.requestedBy.id}>`, inline: true }
             )
-            .setFooter({
-                text: `Requested by ${track.requestedBy.username}`,
-                iconURL: track.requestedBy.avatarURL()
-            })
+            // .setFooter({
+            //     text: ``,
+            //     iconURL: track.requestedBy.avatarURL()
+            // })
             // .setTimestamp();
+        track?.thumbnail && embed.setThumbnail(track.thumbnail);
+
         await channel.send({ embeds: [embed] });
     });
 

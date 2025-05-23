@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
+const formatSI = require('../../utils/common/formatSI');
 
 module.exports = {
     isPlayerCommand: true,
@@ -42,13 +43,10 @@ module.exports = {
                 name: `📋 Now playing - ${currentSong.author}`,
             })
             .addFields(
-                { name: 'Duration', value: currentSong.duration, inline: true },
-                { name: 'Views', value: currentSong.views.toString(), inline: true },
+                { name: '⏱️ _Duration_', value: currentSong.duration, inline: true },
+                { name: '🎵 _Plays_', value: formatSI(currentSong.views), inline: true },
+                { name: '🔍 _Requested by_', value: `<@${currentSong.requestedBy.id}>`, inline: true }
             )
-            .setFooter({
-                text: `Requested by ${currentSong.requestedBy.username}`,
-                iconURL: currentSong.requestedBy.avatarURL()
-            })
 
         // Send the currently playing song information
         return interaction.reply({

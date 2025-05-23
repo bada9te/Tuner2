@@ -42,7 +42,7 @@ module.exports = async function refreshAccessToken() {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
 
-    console.log('[GOOGLE_TOKENS_REFRESH] 🔄 New access token grabbed!');
+    console.log('⚙️  [GOOGLE_TOKENS_REFRESH] New access token grabbed!');
 
     return {
         access_token: response.data.access_token,

@@ -7,6 +7,7 @@ const { AttachmentExtractor } = require("@discord-player/extractor");
 const getValidGoogleOauth = require("../youtube/getValidGoogleOauth");
 const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
 const OverriddenSpotifyExtractor = require("../../extractors/overridenSpotify");
+const formatSI = require("../common/formatSI");
 require('dotenv').config();
  
 
@@ -43,29 +44,30 @@ module.exports = async(client) => {
             }
         });
 
-        console.log("[GOOGLE_TOKENS_REFRESH] ✅ YouTube extractor registered (re-init) with new access_token");
+        console.log("⚙️  [GOOGLE_TOKENS_REFRESH] YouTube extractor registered (re-init) with new access_token");
     }, 45 * 60 * 1000);
 
 
-    console.log('Extractors loaded:', [...player.extractors.store.keys()]);
+    console.log('⚙️  Extractors loaded:', [...player.extractors.store.keys()]);
 
     // Handle the event when a track starts playing
     player.events.on(GuildQueueEvent.PlayerStart, async (queue, track) => {
         const { channel } = queue.metadata;
         const embed = new EmbedBuilder()
             .setColor(0x495e35)
-            .setDescription(`[${track.title}](${track.url})`)
+            .setDescription(`**[${track.title}](${track.url})**`)
             .setAuthor({
                 name: `🍺 Started playing`,
             })
             .addFields(
-                { name: '⏱️ Duration', value: track.duration, inline: true },
-                { name: '👁️ Views', value: track.views.toString(), inline: true },
+                { name: '⏱️ _Duration_', value: track.duration, inline: true },
+                { name: '🎵 _Plays_', value: formatSI(track.views), inline: true },
+                { name: '🔍 _Requested by_', value: `<@${track.requestedBy.id}>`, inline: true }
             )
-            .setFooter({
-                text: `Requested by ${track.requestedBy.username}`,
-                iconURL: track.requestedBy.avatarURL()
-            })
+            // .setFooter({
+            //     text: ``,
+            //     iconURL: track.requestedBy.avatarURL()
+            // })
             // .setTimestamp();
         track?.thumbnail && embed.setThumbnail(track.thumbnail);
 

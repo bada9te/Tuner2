@@ -38,14 +38,9 @@ module.exports = {
         const xVol = interaction.options.getInteger('x');
         queue.node.setVolume(xVol);
 
-        const predictedMS = seekToMS > currentSong.durationMS ? "Skipped" : msToFromatted(seekToMS);
-
         const embed = new EmbedBuilder()
-            .setDescription(`⏭️ Rewinded to ${time} seconds`)
-            .addFields(
-                { name: '⏱️ _Duration_', value: `${predictedMS} / ${currentSong.duration}`, inline: true },
-            )
-
+            .setDescription(`⏭️ Volume ${xVol}%`);
+           
         return interaction.reply({
             embeds: [embed],
         });

@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
 const formatSI = require('../../utils/common/formatSI');
+const safeReply = require('../../utils/common/safeReply');
 
 module.exports = {
     isPlayerCommand: true,
@@ -16,9 +17,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ This server does not have an active player session.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         // Get the currently playing song
@@ -30,9 +29,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ No song is currently playing.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         const embed = new EmbedBuilder()
@@ -49,8 +46,6 @@ module.exports = {
             )
 
         // Send the currently playing song information
-        return interaction.reply({
-            embeds: [embed],
-        });
+        return await safeReply(interaction, { embeds: [embed] });
     }
 }

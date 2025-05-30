@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
-const { useQueue, useTimeline } = require('discord-player');
+const { useTimeline } = require('discord-player');
+const safeReply = require('../../utils/common/safeReply');
 
 module.exports = {
     isPlayerCommand: true,
@@ -15,9 +16,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ This server does not have an active player session.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         // Invert the pause state
@@ -29,8 +28,6 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setDescription(`${wasPaused ? '▶️' : '⏸️'} The player is now ${wasPaused ? 'playing' : 'paused'}.`)
 
-        return interaction.reply({
-            embeds: [embed],
-        });
+        return await safeReply(interaction, { embeds: [embed] });
     }
 }

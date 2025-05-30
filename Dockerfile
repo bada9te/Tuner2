@@ -15,7 +15,7 @@ WORKDIR /app
 COPY . .
 
 # Make yt-dlp binary executable
-RUN chmod +x /app/utils/youtube/ytdlp-bin/yt-dlp
+RUN chmod +x /utils/youtube/ytdlp-bin/yt-dlp
 
 # Install node deps
 RUN npm install

@@ -16,6 +16,8 @@ class OverriddenYoutubeExtractor extends YoutubeiExtractor {
         super(...args);
         const cookies = process.env.YT_COOKIE;
 
+        console.log({ cookies });
+
         fs.writeFileSync(path.join(__dirname, 'cookies.txt'), cookies);
     }
 

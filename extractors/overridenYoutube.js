@@ -16,8 +16,6 @@ class OverriddenYoutubeExtractor extends YoutubeiExtractor {
         super(...args);
         const cookies = process.env.YT_COOKIE;
 
-        console.log({ cookies });
-
         fs.writeFileSync(path.join(__dirname, 'cookies.txt'), cookies);
     }
 
@@ -56,6 +54,7 @@ class OverriddenYoutubeExtractor extends YoutubeiExtractor {
         // Step 1: Spawn yt-dlp to output to stdout
         const ytdlp = spawn(executablePath, [
             '--cookies', 'cookies.txt', 
+            '--proxy', process.env.PROXY_URI,
             '--downloader', 'ffmpeg',
             '-f', 'bestaudio', '--no-part', '--no-cache-dir',
             '-o', '-', // output to stdout

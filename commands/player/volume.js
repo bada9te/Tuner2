@@ -6,7 +6,7 @@ const msToFromatted = require("../../utils/common/msToFromatted");
 module.exports = {
     isPlayerCommand: true,
     data: new SlashCommandBuilder()
-        .setName('seek')
+        .setName('volume')
         .setDescription('Sets the global playback volume at server')
         .addIntegerOption(option => option.setName('x')
             .setDescription('Volume in %')

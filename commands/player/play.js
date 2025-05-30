@@ -228,6 +228,7 @@ async function playTrackAndRespondMsg(player, channel, track, interaction) {
         nodeOptions: {
             metadata: interaction,
             leaveOnEnd: true,
+            disableSeeker: false,
         },
         fallbackSearchEngine: "autoSearch",
     });

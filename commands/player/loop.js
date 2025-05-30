@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { QueueRepeatMode, useQueue } = require('discord-player');
-
+const safeReply = require('../../utils/common/safeReply');
 
 module.exports = {
     isPlayerCommand: true,
@@ -40,9 +40,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ This server does not have an active player session.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         // Get the loop mode
@@ -58,8 +56,6 @@ module.exports = {
         // Send a confirmation message
         const embed = new EmbedBuilder()
             .setDescription(`🔁 Loop mode set to: ${modeName}`);
-        return interaction.reply({
-            embeds: [embed],
-        });
+        return await safeReply(interaction, { embeds: [embed] });
     }
 }

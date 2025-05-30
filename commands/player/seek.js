@@ -1,6 +1,7 @@
 const { useQueue } = require("discord-player");
 const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
 const msToFromatted = require("../../utils/common/msToFromatted");
+const safeReply = require('../../utils/common/safeReply');
 
 
 module.exports = {
@@ -21,9 +22,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ This server does not have an active player session.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         if (!queue.isPlaying()) {
@@ -31,9 +30,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ There is no track playing.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         const currentSong = queue.currentTrack;
@@ -51,8 +48,6 @@ module.exports = {
                 { name: '⏱️ _Duration_', value: `${predictedMS} / ${currentSong.duration}`, inline: true },
             )
 
-        return interaction.reply({
-            embeds: [embed],
-        });
+        return await safeReply(interaction, { embeds: [embed] });
     }
 }

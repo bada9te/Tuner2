@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder} = require('discord.js');
 const { useQueue } = require('discord-player');
+const safeReply = require('../../utils/common/safeReply');
 
 module.exports = {
     isPlayerCommand: true,
@@ -15,9 +16,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ This server does not have an active player session.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         if (!queue.isPlaying()) {
@@ -25,9 +24,7 @@ module.exports = {
                 .setColor(0x942e2e)
                 .setDescription("❌ There is no track playing.")
 
-            return interaction.reply({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         // Skip the current track
@@ -37,8 +34,6 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setDescription('⏭️ Skipped.')
 
-        return interaction.reply({
-            embeds: [embed],
-        });
+        return await safeReply(interaction, { embeds: [embed] });
     }
 }

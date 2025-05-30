@@ -1,11 +1,8 @@
-const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType,
-    EmbedBuilder
-} = require('discord.js');
-const { useMainPlayer, QueryType } = require('discord-player');
+const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType, EmbedBuilder } = require('discord.js');
+const { useMainPlayer } = require('discord-player');
 const identifyExtractorEngine = require("../../utils/player/identifyExtractorEngine");
-const {SpotifyExtractor} = require("@discord-player/extractor");
 const { YoutubeiExtractor } = require('discord-player-youtubei');
-
+const safeReply = require('../../utils/common/safeReply');
 
 module.exports = {
     isPlayerCommand: true,
@@ -22,101 +19,97 @@ module.exports = {
                 .setDescription('Upload a file to play')
                 .setRequired(false)
         ),
+
     async execute(interaction) {
         const player = useMainPlayer();
         const channel = interaction.member.voice.channel;
 
-        const embedErr = new EmbedBuilder()
-            .setColor(0x942e2e);
+        const embedErr = new EmbedBuilder().setColor(0x942e2e);
 
         if (!channel) {
             embedErr.setDescription("👀 You are not connected to the voice channel!");
-            return await interaction.followUp({ embeds: [embedErr] });
+            return await safeReply(interaction, { embeds: [embedErr], ephemeral: true });
         }
 
-        if (
-            interaction.guild.members.me.voice.channel &&
-            interaction.guild.members.me.voice.channel !== channel
-        ) {
+        if (interaction.guild.members.me.voice.channel && interaction.guild.members.me.voice.channel !== channel) {
             embedErr.setDescription('🎵 I am already playing in a different voice channel!');
-            return await interaction.followUp({ embeds: [embedErr] });
+            return await safeReply(interaction, { embeds: [embedErr], ephemeral: true });
         }
 
         const permissions = channel.permissionsFor(interaction.guild.members.me);
-        if (!permissions.has(PermissionsBitField.Flags.Connect) ||
-            !permissions.has(PermissionsBitField.Flags.Speak)) {
+        if (!permissions.has(PermissionsBitField.Flags.Connect) || !permissions.has(PermissionsBitField.Flags.Speak)) {
             embedErr.setDescription('⛓️‍💥 I do not have permission to join and speak in your voice channel!');
-            return await interaction.followUp({ embeds: [embedErr] });
+            return await safeReply(interaction, { embeds: [embedErr], ephemeral: true });
         }
 
         const query = interaction.options.getString('query');
-        const attachment = interaction.options.getAttachment('file'); // Get the attachment if provided
-        await interaction.deferReply();
+        const attachment = interaction.options.getAttachment('file');
 
         if (!query && !attachment) {
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
                 .setDescription("♿ Required parameter (query / file) was not provided!");
-
-            return interaction.followUp({
-                embeds: [embed],
-            });
+            return await safeReply(interaction, { embeds: [embed] });
         }
 
         const url = query || attachment.url;
 
+        await interaction.deferReply();
+
         try {
             const searchEngine = identifyExtractorEngine(url);
-            console.log({searchEngine})
+            console.log({ searchEngine });
 
             if (!searchEngine) {
                 const embed = new EmbedBuilder()
                     .setColor(0x942e2e)
-                    .setDescription("❌ Platform is not supported.")
-
-                return interaction.followUp({
-                    embeds: [embed],
-                });
+                    .setDescription("❌ Platform is not supported.");
+                return await interaction.editReply({ embeds: [embed] });
             }
 
-
-            let searchResult = await player.search(url, {
-                requestedBy: interaction.user,
-            });
+            const searchResult = await player.search(url, { requestedBy: interaction.user });
 
             if (!searchResult || !searchResult.tracks.length) {
                 const embed = new EmbedBuilder()
                     .setColor(0x942e2e)
-                    .setDescription("❌ No tracks found for your query, pls re-run your request if you are sure that the track exists.")
-
-                return interaction.followUp({
-                    embeds: [embed],
-                });
+                    .setDescription("❌ No tracks found for your query, pls re-run your request if you are sure that the track exists.");
+                return await interaction.editReply({ embeds: [embed] });
             }
 
-
-            const topTracks = searchResult.tracks.slice(
-                0, 
-                searchEngine === `ext:${YoutubeiExtractor.identifier}` ? 10 : Infinity
-            );
-            let interval = undefined;
+            const topTracks = searchResult.tracks.slice(0, searchEngine === `ext:${YoutubeiExtractor.identifier}` ? 10 : Infinity);
 
             if (topTracks.length > 1 && searchEngine === `ext:${YoutubeiExtractor.identifier}`) {
                 let timeLeft = 60;
-                const message = await interaction.followUp({
+
+                // Send initial select menu with timer in placeholder
+
+                const message = await interaction.editReply({
                     content: 'Select a track to play:',
                     components: [getSelectRow(timeLeft, topTracks)],
                     fetchReply: true
                 });
 
-                interval = setInterval(async () => {
-                    timeLeft--;
+                const collector = message.createMessageComponentCollector({
+                    componentType: ComponentType.StringSelect,
+                    time: 60000,
+                    max: 1,
+                });
 
+                let interval = setInterval(async () => {
+                    timeLeft--;
                     if (timeLeft <= 0) {
                         clearInterval(interval);
+                        try {
+                            await message.edit({
+                                content: '⏱️ Selection timed out.',
+                                components: [],
+                            });
+                        } catch (e) {
+                            console.warn('Failed to edit message after timeout:', e);
+                        }
+                        collector.stop();
                         return;
                     }
-
                     try {
                         await message.edit({
                             components: [getSelectRow(timeLeft, topTracks)],
@@ -124,77 +117,65 @@ module.exports = {
                     } catch (e) {
                         console.warn('Failed to update placeholder:', e);
                         clearInterval(interval);
+                        collector.stop();
                     }
                 }, 1000);
-
-                const collector = interaction.channel.createMessageComponentCollector({
-                    componentType: ComponentType.StringSelect,
-                    time: 60000,
-                    max: 1,
-                });
 
                 collector.on('collect', async i => {
                     if (i.user.id !== interaction.user.id) {
                         return i.reply({ content: 'This menu is not for you!', ephemeral: true });
                     }
 
-                    await i.deferUpdate(); // prevent interaction expiration
+                    await i.deferUpdate(); // defer the component interaction to avoid timeout
 
-                    const selectedIndex = parseInt(i.values[0]);
+                    clearInterval(interval);
+                    collector.stop();
+
+                    const selectedIndex = parseInt(i.values[0], 10);
                     const selectedTrack = topTracks[selectedIndex];
 
                     try {
-                        interval && clearInterval(interval);
-
-                        await playTrackAndRespondMsg(
-                            player,
-                            channel,
-                            selectedTrack,
-                            interaction
-                        );
+                        await playTrackAndRespondMsg(player, channel, selectedTrack, interaction);
                     } catch (err) {
                         console.warn('Playback error:', err);
-                        const embed = new EmbedBuilder()
-                            .setColor(0x942e2e)
-                            .setDescription("❌ Something went wrong while trying to play the track.")
-                        return interaction.followUp({
-                            embeds: [embed],
-                        });
+                        try {
+                            await interaction.editReply({
+                                embeds: [
+                                    new EmbedBuilder()
+                                        .setColor(0x942e2e)
+                                        .setDescription("❌ Something went wrong while trying to play the track.")
+                                ],
+                                components: []
+                            });
+                        } catch {}
                     }
                 });
 
                 collector.on('end', async collected => {
                     if (collected.size === 0) {
+                        clearInterval(interval);
                         try {
-                            const embed = new EmbedBuilder()
-                                .setColor(0x942e2e)
-                                .setDescription("⏱️ No selection made in time.")
-                            return interaction.editReply({
-                                content: "",
-                                embeds: [embed],
-                                components: []
+                            await message.edit({
+                                content: '⏱️ No selection made in time.',
+                                components: [],
                             });
                         } catch (err) {
-                            console.warn('Failed to edit reply after collector timeout:', err);
+                            console.warn('Failed to edit message after collector timeout:', err);
                         }
                     }
                 });
+
             } else {
+                // Only one track or not YouTubeI engine => play directly
                 const selectedTrack = topTracks[0];
-                await playTrackAndRespondMsg(
-                    player,
-                    channel,
-                    selectedTrack,
-                    interaction
-                );
+                await playTrackAndRespondMsg(player, channel, selectedTrack, interaction);
             }
         } catch (e) {
             console.error(e);
             const embed = new EmbedBuilder()
                 .setColor(0x942e2e)
-                .setDescription("❌ Something went wrong while trying to play the track.")
-
-            return interaction.editReply({
+                .setDescription("❌ Something went wrong while trying to play the track.");
+            await interaction.editReply({
                 content: "",
                 embeds: [embed],
                 components: []
@@ -203,7 +184,6 @@ module.exports = {
     },
 };
 
-
 // Create select menu with dynamic placeholder
 function getSelectRow(secondsRemaining, topTracks) {
     const menu = new StringSelectMenuBuilder()
@@ -211,7 +191,7 @@ function getSelectRow(secondsRemaining, topTracks) {
         .setPlaceholder(`🔍 Choose a track (${secondsRemaining}s left)`)
         .addOptions(
             topTracks.map((track, index) => ({
-                label: `[${track.duration}] ${track.title.slice(0, 80)}`,
+                label: `[${track?.raw?.live ? "Live" : track.duration}] ${track.title.slice(0, 80)}`,
                 description: track.author.slice(0, 50),
                 value: index.toString(),
             }))
@@ -220,10 +200,7 @@ function getSelectRow(secondsRemaining, topTracks) {
     return new ActionRowBuilder().addComponents(menu);
 }
 
-
 async function playTrackAndRespondMsg(player, channel, track, interaction) {
-    // console.log({track});
-    // ✅ Actually play the track
     await player.play(channel, track, {
         nodeOptions: {
             metadata: interaction,
@@ -234,10 +211,9 @@ async function playTrackAndRespondMsg(player, channel, track, interaction) {
     });
 
     const embed = new EmbedBuilder()
-        //.setColor(0x947e2e)
         .setDescription(`✏️ [${track.title}](${track.url})`);
 
-    return interaction.editReply({
+    await interaction.editReply({
         content: "",
         embeds: [embed],
         components: []

@@ -8,6 +8,7 @@ const getValidGoogleOauth = require("../youtube/getValidGoogleOauth");
 const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
 const OverriddenSpotifyExtractor = require("../../extractors/overridenSpotify");
 const formatSI = require("../common/formatSI");
+const OverriddenYoutubeExtractor = require("../../extractors/overridenYoutube");
 require('dotenv').config();
  
 
@@ -20,6 +21,9 @@ module.exports = async(client) => {
     await player.extractors.register(OverriddenSpotifyExtractor);
 
     await player.extractors.register(OverriddenSoundCloudExtractor);
+    await player.extractors.register(OverriddenYoutubeExtractor);
+
+    /*
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
             uri: process.env.PROXY_URI
@@ -30,8 +34,10 @@ module.exports = async(client) => {
             useClient: "IOS",
         }
     });
+    */
 
     // re-init youtube extractor every 1 hour to avoid expired CRE 
+    /*
     setInterval(async() => {
         await player.extractors.unregister(YoutubeiExtractor.identifier);
         await player.extractors.register(YoutubeiExtractor, {
@@ -47,6 +53,7 @@ module.exports = async(client) => {
 
         console.log("⚙️  [GOOGLE_TOKENS_REFRESH] YouTube extractor registered (re-init) with new access_token");
     }, 45 * 60 * 1000);
+    */
 
 
     console.log('⚙️  Extractors loaded:', [...player.extractors.store.keys()]);
@@ -61,7 +68,7 @@ module.exports = async(client) => {
                 name: `🍺 Started playing`,
             })
             .addFields(
-                { name: '⏱️ _Duration_', value: track.duration, inline: true },
+                { name: `${track?.raw?.live ? '🍿' : '⏱️'} _Duration_`, value: track?.raw?.live ? "Live" : track.duration, inline: true },
                 { name: '🎵 _Plays_', value: formatSI(track.views), inline: true },
                 { name: '🔍 _Requested by_', value: `<@${track.requestedBy.id}>`, inline: true }
             )
@@ -105,7 +112,6 @@ module.exports = async(client) => {
 
     player.events.on(GuildQueueEvent.PlayerError, async(queue, error) => {
         console.error(`❌ Player error: ${error.message}`);
-        console.error(`❌ Error: ${error.message}`);
         const { channel } = queue.metadata;
         const embed = new EmbedBuilder()
             .setColor(0x942e2e)
@@ -113,6 +119,18 @@ module.exports = async(client) => {
 
         await channel.send({ embeds: [embed] });
     });
+
+    
+    player.events.on(GuildQueueEvent.WillPlayTrack, async(queue, track, config, done) => {
+        
+        const { channel } = queue.metadata;
+        const embed = new EmbedBuilder()
+            .setDescription(`Preparing the audio stream...`)
+
+        await channel.send({ embeds: [embed] });
+        done();
+    });
+    
 
     return player;
 }

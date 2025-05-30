@@ -100,6 +100,8 @@ class OverriddenSoundCloudExtractor extends SoundCloudExtractor {
             const audioStream = Readable.from([audioBuffer]);
     
             const ffmpegStream = ffmpeg(audioStream)
+                .audioBitrate('320k')
+                .audioFrequency(44100)
                 .format('mp3') // or 'opus', 's16le', etc., depending on use case
                 .audioCodec('libmp3lame') // optional: pick a codec
                 .on('start', cmd => console.log('🎬 FFmpeg started:', cmd))

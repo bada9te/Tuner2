@@ -25,9 +25,9 @@ module.exports = async(client) => {
             uri: process.env.PROXY_URI
         }),
         cookie: await getValidGoogleOauth(),
-        // generateWithPoToken: true,
+        generateWithPoToken: true,
         streamOptions: {
-            useClient: "IOS",
+            useClient: "WEB",
         }
     });
 
@@ -39,8 +39,9 @@ module.exports = async(client) => {
                 uri: process.env.PROXY_URI
             }),
             cookie: await getValidGoogleOauth(),
+            generateWithPoToken: true,
             streamOptions: {
-                useClient: "IOS",
+                useClient: "WEB",
             }
         });
 
@@ -92,12 +93,25 @@ module.exports = async(client) => {
         */
     });
 
-    player.events.on(GuildQueueEvent.Error, (queue, error) => {
+    player.events.on(GuildQueueEvent.Error, async(queue, error) => {
         console.error(`❌ Error: ${error.message}`);
+        const { channel } = queue.metadata;
+        const embed = new EmbedBuilder()
+            .setColor(0x942e2e)
+            .setDescription(`❌ ${error.message}`)
+
+        await channel.send({ embeds: [embed] });
     });
 
-    player.events.on(GuildQueueEvent.PlayerError, (queue, error) => {
+    player.events.on(GuildQueueEvent.PlayerError, async(queue, error) => {
         console.error(`❌ Player error: ${error.message}`);
+        console.error(`❌ Error: ${error.message}`);
+        const { channel } = queue.metadata;
+        const embed = new EmbedBuilder()
+            .setColor(0x942e2e)
+            .setDescription(`❌ ${error.message}`)
+
+        await channel.send({ embeds: [embed] });
     });
 
     return player;

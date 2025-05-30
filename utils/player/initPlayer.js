@@ -25,9 +25,9 @@ module.exports = async(client) => {
             uri: process.env.PROXY_URI
         }),
         cookie: await getValidGoogleOauth(),
-        generateWithPoToken: true,
+        // generateWithPoToken: true,
         streamOptions: {
-            useClient: "WEB",
+            useClient: "IOS",
         }
     });
 
@@ -39,9 +39,9 @@ module.exports = async(client) => {
                 uri: process.env.PROXY_URI
             }),
             cookie: await getValidGoogleOauth(),
-            generateWithPoToken: true,
+            // generateWithPoToken: true,
             streamOptions: {
-                useClient: "WEB",
+                useClient: "IOS",
             }
         });
 

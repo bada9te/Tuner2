@@ -2,6 +2,7 @@ const { YoutubeiExtractor } = require("discord-player-youtubei");
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('ffmpeg-static');
 const os = require("os");
+const fs = require("fs");
 const path = require("path");
 const { spawn } = require('child_process');
 require('dotenv').config();
@@ -11,6 +12,13 @@ ffmpeg.setFfmpegPath(ffmpegPath);
 
 
 class OverriddenYoutubeExtractor extends YoutubeiExtractor {
+    constructor (...args) {
+        super(...args);
+        const cookies = process.env.YT_COOKIE;
+
+        fs.writeFileSync(path.join(__dirname, 'cookies.txt'), cookies);
+    }
+
     async stream(info) {
         if (info?.raw?.live) {
             // call parent stream function cause we dont have to download stream
@@ -45,7 +53,7 @@ class OverriddenYoutubeExtractor extends YoutubeiExtractor {
 
         // Step 1: Spawn yt-dlp to output to stdout
         const ytdlp = spawn(executablePath, [
-            // '--cookies', 'cookies.txt', 
+            '--cookies', 'cookies.txt', 
             '--downloader', 'ffmpeg',
             '-f', 'bestaudio', '--no-part', '--no-cache-dir',
             '-o', '-', // output to stdout

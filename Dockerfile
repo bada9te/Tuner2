@@ -14,8 +14,12 @@ WORKDIR /app
 # Copy files
 COPY . .
 
+# Make yt-dlp binary executable
+USER root
+RUN chmod +x /app/utils/youtube/ytdlp-bin/yt-dlp
+
 # Install node deps
 RUN npm install
 
 # Run the bot
-CMD ["chmod", "+x", "/utils/youtube/ytdlp-bin/yt-dlp", "&&", "node", "index.js"]
+CMD ["node", "index.js"]

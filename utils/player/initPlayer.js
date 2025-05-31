@@ -6,9 +6,9 @@ const { ProxyAgent } = require("undici");
 const { AttachmentExtractor } = require("@discord-player/extractor");
 const getValidGoogleOauth = require("../youtube/getValidGoogleOauth");
 const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
-const OverriddenSpotifyExtractor = require("../../extractors/overridenSpotify");
+const OverriddenSpotifyExtractor = require("../../extractors/overriddenSpotify");
 const formatSI = require("../common/formatSI");
-const OverriddenYoutubeExtractor = require("../../extractors/overridenYoutube");
+const checkProxy = require("../common/checkProxy");
 require('dotenv').config();
  
 
@@ -22,9 +22,10 @@ module.exports = async(client) => {
 
     await player.extractors.register(OverriddenSoundCloudExtractor);
 
+    const proxies = await checkProxy();
     await player.extractors.register(YoutubeiExtractor, {
         proxy: new ProxyAgent({
-            uri: process.env.PROXY_URI
+            uri: proxies[Math.floor(Math.random() * proxies.length)]
         }),
         cookie: await getValidGoogleOauth(),
         // generateWithPoToken: true,
@@ -35,10 +36,11 @@ module.exports = async(client) => {
 
     // re-init youtube extractor every 1 hour to avoid expired CRE 
     setInterval(async() => {
+        const proxies = await checkProxy();
         await player.extractors.unregister(YoutubeiExtractor.identifier);
         await player.extractors.register(YoutubeiExtractor, {
             proxy: new ProxyAgent({
-                uri: process.env.PROXY_URI
+                uri: proxies[Math.floor(Math.random() * proxies.length)]
             }),
             cookie: await getValidGoogleOauth(),
             streamOptions: {
@@ -47,8 +49,8 @@ module.exports = async(client) => {
         });
 
         console.log("⚙️  [GOOGLE_TOKENS_REFRESH] YouTube extractor registered (re-init) with new access_token");
-    }, 45 * 60 * 1000);
-
+    }, 1000 * 60 * 10); // 10 min
+    
 
     console.log('⚙️  Extractors loaded:', [...player.extractors.store.keys()]);
 

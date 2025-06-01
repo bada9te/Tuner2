@@ -49,7 +49,7 @@ module.exports = async(client) => {
         });
 
         console.log("⚙️  [GOOGLE_TOKENS_REFRESH] YouTube extractor registered (re-init) with new access_token");
-    }, 1000 * 60 * 10); // 10 min
+    }, 1000 * 60 * 60 * 24); // 60 min * 24 (1 day)
     
 
     console.log('⚙️  Extractors loaded:', [...player.extractors.store.keys()]);

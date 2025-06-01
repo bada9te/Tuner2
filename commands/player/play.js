@@ -54,7 +54,12 @@ module.exports = {
 
         const url = query || attachment.url;
 
-        await interaction.deferReply();
+        try {
+            await interaction.deferReply();
+        } catch (error) {
+            
+        }
+        
 
         try {
             const searchEngine = identifyExtractorEngine(url);

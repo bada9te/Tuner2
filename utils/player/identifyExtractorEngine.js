@@ -15,7 +15,7 @@ function identifyExtractorEngine(url) {
         return `ext:${SoundCloudExtractor.identifier}`;
     }
 
-    return `ext:${YoutubeiExtractor.identifier}`;
+    return `ext:${SoundCloudExtractor.identifier}`;
 }
 
 module.exports = identifyExtractorEngine;

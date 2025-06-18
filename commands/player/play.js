@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, StringSelectMenuBuilder, ComponentType, EmbedBuilder } = require('discord.js');
-const { useMainPlayer } = require('discord-player');
+const { useMainPlayer, QueryType } = require('discord-player');
 const identifyExtractorEngine = require("../../utils/player/identifyExtractorEngine");
 const { YoutubeiExtractor } = require('discord-player-youtubei');
 const safeReply = require('../../utils/common/safeReply');
@@ -11,7 +11,7 @@ module.exports = {
         .setDescription('Searches the track by provided query.')
         .addStringOption(option =>
             option.setName('query')
-                .setDescription('Youtube video link or text query')
+                .setDescription('Link or text query')
                 .setRequired(false)
         )
         .addAttachmentOption(option =>
@@ -72,7 +72,7 @@ module.exports = {
                 return await interaction.editReply({ embeds: [embed] });
             }
 
-            const searchResult = await player.search(url, { requestedBy: interaction.user });
+            const searchResult = await player.search(url, { requestedBy: interaction.user, fallbackSearchEngine: QueryType.SOUNDCLOUD_SEARCH });
 
             if (!searchResult || !searchResult.tracks.length) {
                 const embed = new EmbedBuilder()
@@ -81,9 +81,9 @@ module.exports = {
                 return await interaction.editReply({ embeds: [embed] });
             }
 
-            const topTracks = searchResult.tracks.slice(0, searchEngine === `ext:${YoutubeiExtractor.identifier}` ? 10 : Infinity);
+            const topTracks = searchResult.tracks.slice(0, 20);
 
-            if (topTracks.length > 1 && searchEngine === `ext:${YoutubeiExtractor.identifier}`) {
+            if (topTracks.length > 1) {
                 let timeLeft = 60;
 
                 // Send initial select menu with timer in placeholder

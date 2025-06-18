@@ -1,14 +1,11 @@
 const { GuildQueueEvent } = require("discord-player");
 const { Player } = require("discord-player");
 const { EmbedBuilder} = require('discord.js');
-const { YoutubeiExtractor } = require("discord-player-youtubei");
-const { ProxyAgent } = require("undici");
 const { AttachmentExtractor } = require("@discord-player/extractor");
-const getValidGoogleOauth = require("../youtube/getValidGoogleOauth");
 const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
 const OverriddenSpotifyExtractor = require("../../extractors/overriddenSpotify");
 const formatSI = require("../common/formatSI");
-const checkProxy = require("../common/checkProxy");
+const OverriddenYoutubeExtractor = require("../../extractors/overriddenYouTube");
 require('dotenv').config();
  
 
@@ -19,37 +16,8 @@ module.exports = async(client) => {
     // Load player extractors
     await player.extractors.register(AttachmentExtractor);
     await player.extractors.register(OverriddenSpotifyExtractor);
-
     await player.extractors.register(OverriddenSoundCloudExtractor);
-
-    const proxies = await checkProxy();
-    await player.extractors.register(YoutubeiExtractor, {
-        proxy: new ProxyAgent({
-            uri: proxies[Math.floor(Math.random() * proxies.length)]
-        }),
-        cookie: await getValidGoogleOauth(),
-        // generateWithPoToken: true,
-        streamOptions: {
-            useClient: "IOS",
-        }
-    });
-
-    // re-init youtube extractor every 1 hour to avoid expired CRE 
-    setInterval(async() => {
-        const proxies = await checkProxy();
-        await player.extractors.unregister(YoutubeiExtractor.identifier);
-        await player.extractors.register(YoutubeiExtractor, {
-            proxy: new ProxyAgent({
-                uri: proxies[Math.floor(Math.random() * proxies.length)]
-            }),
-            cookie: await getValidGoogleOauth(),
-            streamOptions: {
-                useClient: "IOS",
-            }
-        });
-
-        console.log("⚙️  [GOOGLE_TOKENS_REFRESH] YouTube extractor registered (re-init) with new access_token");
-    }, 1000 * 60 * 60 * 24); // 60 min * 24 (1 day)
+    // await player.extractors.register(OverriddenYoutubeExtractor);
     
 
     console.log('⚙️  Extractors loaded:', [...player.extractors.store.keys()]);
@@ -118,7 +86,6 @@ module.exports = async(client) => {
 
     
     player.events.on(GuildQueueEvent.WillPlayTrack, async(queue, track, config, done) => {
-        
         const { channel } = queue.metadata;
         const embed = new EmbedBuilder()
             .setDescription(`Preparing the audio stream...`)

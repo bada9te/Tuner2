@@ -95,10 +95,11 @@ class OverriddenSoundCloudExtractor extends SoundCloudExtractor {
             const trackData = await axios.get(trackUrl, {
                 responseType: 'arraybuffer'
             });
+
     
             const audioBuffer = Buffer.from(trackData.data);
             const audioStream = Readable.from([audioBuffer]);
-    
+
             const ffmpegStream = ffmpeg(audioStream)
                 .audioBitrate('320k')
                 .audioFrequency(44100)
@@ -110,6 +111,38 @@ class OverriddenSoundCloudExtractor extends SoundCloudExtractor {
             return ffmpegStream.pipe();
             
         } catch (error) {
+            throw error;
+        }
+    }
+
+    async search(query, options = {}) {
+        try {
+            // Make a search request to SoundCloud API
+            const response = await axios.get(api + 'search/tracks', {
+                params: {
+                    q: query,
+                    client_id: clientId,
+                    limit: options.limit || 10,
+                    offset: options.offset || 0
+                }
+            });
+
+            // Map the results to the format expected by discord-player
+            const tracks = response.data.collection.map(track => ({
+                title: track.title,
+                url: track.permalink_url,
+                duration: track.duration,
+                thumbnail: track.artwork_url?.replace('-large', '-t500x500') || '',
+                artist: track.user?.username || 'Unknown artist',
+                source: 'soundcloud'
+            }));
+
+            return {
+                tracks,
+                playlist: null // SoundCloud search doesn't return playlists
+            };
+        } catch (error) {
+            console.error('Error searching SoundCloud:', error.message);
             throw error;
         }
     }

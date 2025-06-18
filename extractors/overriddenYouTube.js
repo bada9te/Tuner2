@@ -1,8 +1,8 @@
-const { SpotifyExtractor } = require('@discord-player/extractor');
 const { QueryType, useMainPlayer } = require('discord-player');
+const { YoutubeiExtractor } = require('discord-player-youtubei');
 
 
-class OverriddenSpotifyExtractor extends SpotifyExtractor {
+class OverriddenYoutubeExtractor extends YoutubeiExtractor {
     async handle(query, context) {
         // Step 1: Resolve Spotify track as usual
         const originalResult = await super.handle(query, context);
@@ -13,9 +13,9 @@ class OverriddenSpotifyExtractor extends SpotifyExtractor {
         }
 
         // Step 2: Use first Spotify track to build SoundCloud search query
-        const spotifyTrack = originalResult.tracks[0];
-        const title = spotifyTrack.title;
-        const author = spotifyTrack.author;
+        const youtubeTrack = originalResult.tracks[0];
+        const title = youtubeTrack.title;
+        const author = youtubeTrack.author;
 
         const searchQuery = `${author} - ${title}`;
 
@@ -39,4 +39,4 @@ class OverriddenSpotifyExtractor extends SpotifyExtractor {
 }
 
 
-module.exports = OverriddenSpotifyExtractor;
+module.exports = OverriddenYoutubeExtractor;

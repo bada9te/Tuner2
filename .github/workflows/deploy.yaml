@@ -1,13 +1,12 @@
-name: 🚀 Deploy to EC2
+name: 🚀 Deploy Discord Bot to EC2
 
 on:
   push:
     branches:
-      - main  # deploy only when pushing to main branch
+      - main  # deploy when pushing to main
 
 jobs:
   deploy:
-    name: Deploy App to EC2
     runs-on: ubuntu-latest
 
     steps:
@@ -17,52 +16,37 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: 18
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project (if applicable)
+      - name: Build (optional)
         run: |
-          if [ -f package.json ] && grep -q "\"build\"" package.json; then
+          if grep -q "\"build\"" package.json; then
             npm run build
           else
-            echo "No build step found, skipping..."
+            echo "No build script found, skipping build."
           fi
 
-      - name: Test SSH connection
-        uses: appleboy/ssh-action@v0.1.0
-        with:
-          host: ${{ secrets.AWS_EC2_HOST }}
-          username: ${{ secrets.AWS_EC2_USER }}
-          key: ${{ secrets.AWS_EC2_SSH }}
-          script: |
-            echo "✅ Connected to EC2"
-            hostname
-          debug: true
+      # 🧩 Write your private key into a file
+      - name: Create SSH key file
+        run: |
+          echo "${{ secrets.AWS_EC2_SSH }}" > key.pem
+          chmod 600 key.pem
 
-      - name: Upload code to EC2
-        uses: appleboy/scp-action@v0.1.0
-        with:
-          host: ${{ secrets.AWS_EC2_HOST }}
-          username: ${{ secrets.AWS_EC2_USER }}
-          key: ${{ secrets.AWS_EC2_SSH }}
-          source: "."
-          target: "${{ secrets.EC2_APP_DIR || '/home/ec2-user/app' }}"
-          debug: true
+      # 📦 Upload project files to EC2
+      - name: Upload files to EC2 via rsync
+        run: |
+          rsync -avz -e "ssh -i key.pem -o StrictHostKeyChecking=no" \
+          ./ ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }}:/home/${{ secrets.AWS_EC2_USER }}/tuner2-bot
 
-      - name: Restart App on EC2
-        uses: appleboy/ssh-action@v0.1.0
-        with:
-          host: ${{ secrets.AWS_EC2_HOST }}
-          username: ${{ secrets.AWS_EC2_USER }}
-          key: ${{ secrets.AWS_EC2_SSH }}
-          script: |
-            cd "${{ secrets.EC2_APP_DIR || '/home/ec2-user/app' }}"
-            echo "📦 Installing dependencies..."
+      # 🚀 Restart bot on EC2
+      - name: Restart Discord bot
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
+            cd ~/tuner2-bot
             npm ci --omit=dev
-            echo "🔁 Restarting PM2 process..."
             pm2 restart tuner2-bot || pm2 start index.js --name tuner2-bot
             pm2 save
-            echo "✅ Deployment complete!"
+          EOF

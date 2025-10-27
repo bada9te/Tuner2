@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
 
       - name: Install dependencies
         run: npm ci
@@ -46,7 +46,7 @@ jobs:
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
             cd ~/tuner2-bot
-            npm ci --omit=dev
+            npm install
             pm2 restart tuner2-bot || pm2 start index.js --name tuner2-bot
             pm2 save
           EOF

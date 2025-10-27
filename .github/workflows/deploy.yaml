@@ -34,18 +34,18 @@ jobs:
       - name: Upload code to EC2
         uses: appleboy/scp-action@v0.1.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH }}
           source: "."
           target: "${{ secrets.EC2_APP_DIR || '/home/ec2-user/app' }}"
 
       - name: Restart App on EC2
         uses: appleboy/ssh-action@v0.1.0
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH }}
           script: |
             cd "${{ secrets.EC2_APP_DIR || '/home/ec2-user/app' }}"
             echo "📦 Installing dependencies..."

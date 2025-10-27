@@ -31,6 +31,17 @@ jobs:
             echo "No build step found, skipping..."
           fi
 
+      - name: Test SSH connection
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USER }}
+          key: ${{ secrets.AWS_EC2_SSH }}
+          script: |
+            echo "✅ Connected to EC2"
+            hostname
+          debug: true
+
       - name: Upload code to EC2
         uses: appleboy/scp-action@v0.1.0
         with:
@@ -39,6 +50,7 @@ jobs:
           key: ${{ secrets.AWS_EC2_SSH }}
           source: "."
           target: "${{ secrets.EC2_APP_DIR || '/home/ec2-user/app' }}"
+          debug: true
 
       - name: Restart App on EC2
         uses: appleboy/ssh-action@v0.1.0

@@ -46,12 +46,7 @@ jobs:
         run: |
           ssh -i key.pem -o StrictHostKeyChecking=no ${{ secrets.AWS_EC2_USER }}@${{ secrets.AWS_EC2_HOST }} << 'EOF'
             cd ~/tuner2-bot
-            cat > .env << ENV_EOF
-            TOKEN=${{ secrets.DISCORD_TOKEN }}
-            CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}
-            SOUNDCLOUD_CLIENT_ID=${{ secrets.SOUNDCLOUD_CLIENT_ID }}
-            ENV_EOF
             npm install
             pm2 restart tuner2-bot || pm2 start index.js --name tuner2-bot
             pm2 save
-          EOF
+            EOF

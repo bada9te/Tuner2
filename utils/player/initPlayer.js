@@ -5,7 +5,6 @@ const { AttachmentExtractor } = require("@discord-player/extractor");
 const OverriddenSoundCloudExtractor = require("../../extractors/overriddenSoundCloud");
 const OverriddenSpotifyExtractor = require("../../extractors/overriddenSpotify");
 const formatSI = require("../common/formatSI");
-const OverriddenYoutubeExtractor = require("../../extractors/overriddenYouTube");
 require('dotenv').config();
  
 
